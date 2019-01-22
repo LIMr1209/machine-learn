@@ -11,10 +11,10 @@ from torchnet.meter import AverageValueMeter
 class Config(object):
     data_path = 'data/'  # 数据集存放路径
     num_workers = 4  # 多进程加载数据所用的进程数
-    image_size = 96  # 图片尺寸
+    image_size = 224  # 图片尺寸
     batch_size = 32
     max_epoch = 4000
-    lr1 = 2e-4  # 生成器的学习率
+    lr1 = 2e-4  # 生成器的学习率 2.7*2-4
     lr2 = 2e-4  # 判别器的学习率
     beta1 = 0.5  # Adam优化器的beta1参数
     gpu = True  # 是否使用GPU
@@ -24,7 +24,7 @@ class Config(object):
     save_path = 'imgs/'  # 生成图片保存路径
 
     vis = True  # 是否使用visdom可视化
-    env = 'GAN'  # visdom的env
+    env = 'opalus_generate'  # visdom的env
     plot_every = 5  # 每间隔20 batch，visdom画图一次
 
     d_every = 1  # 每1个batch训练一次判别器

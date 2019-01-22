@@ -5,7 +5,7 @@ from utils.get_classes import get_classes
 
 
 class DefaultConfig(object):
-    env = 'opalus'  # visdom 环境
+    env = 'opalus_recognltion'  # visdom 环境
     vis_port = 8097  # visdom 端口
     model = 'ResNet34'  # 使用的模型，名字必须与models/__init__.py中的名字一致
 

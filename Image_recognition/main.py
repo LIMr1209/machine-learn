@@ -77,7 +77,7 @@ def train(**kwargs):
     # 3. 平方损失（Square Loss）：主要是最小二乘法（OLS）中；
     # 4. 指数损失（Exponential Loss） ：主要用于Adaboost 集成学习算法中；
     # 5. 其他损失（如0-1损失，绝对值损失）
-    criterion = t.nn.CrossEntropyLoss().cuda()  # 损失函数
+    criterion = t.nn.CrossEntropyLoss().to(opt.device)  # 损失函数
     # step2: meters
     train_losses = AverageMeter()
     train_top1 = AverageMeter()
@@ -85,6 +85,12 @@ def train(**kwargs):
     model = getattr(models, opt.model)()
     optimizer = model.get_optimizer(opt.lr, opt.weight_decay)  # 优化器
     if opt.load_model_path:
+        # # 把所有的张量加载到CPU中
+        # t.load(opt.load_model_path, map_location=lambda storage, loc: storage)
+        # # 把所有的张量加载到GPU 1中
+        # t.load(opt.load_model_path, map_location=lambda storage, loc: storage.cuda(1))
+        # # 把张量从GPU 1 移动到 GPU 0
+        # t.load(opt.load_model_path, map_location={'cuda:1': 'cuda:0'})
         checkpoint = t.load(opt.load_model_path)
         start_epoch = checkpoint["epoch"]
         best_precision = checkpoint["best_precision"]

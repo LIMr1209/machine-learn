@@ -1,18 +1,12 @@
-## 安装
-- PyTorch : 可按照[PyTorch官网](http://pytorch.org)的指南，根据自己的平台安装指定的版本
-- 安装指定依赖：
+## 环境准备
 
-```
-pip install -r requirements.txt
-```
+- 本程序需要安装[PyTorch](https://pytorch.org/) 本人安装总结[地址](https:)
+- 还需要通过`pip install -r requirements.txt` 安装其它依赖
+
+## 用法
+如果想要使用visdom可视化，请先运行`python2 -m visdom.server`启动visdom服务
 
 ## 训练
-必须首先启动visdom(可视化)：  
-
-```
-python -m visdom.server
-```
-
 然后使用如下命令启动训练：
 
 ```
@@ -29,11 +23,11 @@ python main.py help
 ## 测试
 
 ```
-python main.py test --data-root=./data/test  --batch-size=256 --load-path='checkpoints/squeezenet.pth'
+python main.py test --data-root=./data/test  --batch-size=256 --load-path='checkpoints/squeezenet.pth.tar'
 ```
 
 ## 识别
 
 ```
-python main.py recognition --url='图片地址' --load-path='checkpoints/squeezenet.pth'
+python main.py recognition --url='图片地址' --load-path='checkpoints/squeezenet.pth.tar'
 ```
