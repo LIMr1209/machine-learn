@@ -1,13 +1,13 @@
 ## 环境准备
 
-- 本程序需要安装[PyTorch](https://pytorch.org/) 本人安装总结[地址]()
+- 本程序需要安装[PyTorch](https://pytorch.org/) 本人安装总结[地址](https://blog.csdn.net/qq_41654985/article/details/86599016)
 - 还需要通过`pip install -r requirements.txt` 安装其它依赖
 
 ## 数据
 标签文件夹下放入图片
 
 ## 用法
-如果想要使用visdom可视化，请先运行`python2 -m visdom.server`启动visdom服务
+如果想要使用visdom可视化，请先运行`python -m visdom.server`启动visdom服务
 
 基本用法：
 ```

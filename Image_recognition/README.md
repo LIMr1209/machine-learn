@@ -1,6 +1,6 @@
 ## 环境准备
 
-- 本程序需要安装[PyTorch](https://pytorch.org/) 本人安装总结[地址](https:)
+- 本程序需要安装[PyTorch](https://pytorch.org/) 本人安装总结[地址](https://blog.csdn.net/qq_41654985/article/details/86599016)
 - 还需要通过`pip install -r requirements.txt` 安装其它依赖
 
 ## 用法

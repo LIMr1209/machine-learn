@@ -11,11 +11,11 @@ from torchnet.meter import AverageValueMeter
 class Config(object):
     data_path = 'data/'  # 数据集存放路径
     num_workers = 4  # 多进程加载数据所用的进程数
-    image_size = 224  # 图片尺寸
+    image_size = 96  # 图片尺寸
     batch_size = 32
     max_epoch = 4000
-    lr1 = 2e-4  # 生成器的学习率 2.7*2-4
-    lr2 = 2e-4  # 判别器的学习率
+    lr1 = 0.001  # 2e-4  # 生成器的学习率 2.7*2-4
+    lr2 = 0.001  # 2e-4  # 判别器的学习率
     beta1 = 0.5  # Adam优化器的beta1参数
     gpu = True  # 是否使用GPU
     nz = 100  # 噪声维度
@@ -144,8 +144,9 @@ def train(**kwargs):
             # 保存模型、图片
             tv.utils.save_image(fix_fake_imgs.data[:64], '%s/%s.png' % (opt.save_path, epoch), normalize=True,
                                 range=(-1, 1))
-            t.save(netd.state_dict(), 'checkpoints/netd_%s.pth' % epoch)
-            t.save(netg.state_dict(), 'checkpoints/netg_%s.pth' % epoch)
+            tag = [i for i in os.listdir('./data') if os.path.isdir('./data/' + i)][0]
+            t.save(netd.state_dict(), 'checkpoints/%s_d_%s.pth' % (tag, epoch))
+            t.save(netg.state_dict(), 'checkpoints/%s_g_%s.pth' % (tag, epoch))
             errord_meter.reset()
             errorg_meter.reset()
 
