@@ -33,6 +33,12 @@ class DenseNet161(BasicModule):
     def forward(self, x):
         return self.model(x)
 
+    def get_optimizer(self, lr, weight_decay):
+        if not opt.pretrained:
+            return super(DenseNet161, self).get_optimizer(lr, weight_decay)
+        else:
+            return torch.optim.Adam(self.model.fc.parameters(), lr=lr, weight_decay=weight_decay)
+
 
 if __name__ == '__main__':
     a = DenseNet161()

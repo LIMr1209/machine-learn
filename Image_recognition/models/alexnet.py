@@ -4,7 +4,7 @@ from torchvision.models import AlexNet
 import torch
 
 
-def alexnet(pretrained=False, **kwargs):
+def alexnet(pretrained=False, **kwargs): # 224*224
     if pretrained:
         model = AlexNet(**kwargs)
         model.load_state_dict(torch.load('./checkpoint/inception_v3_google-1a9a5a14.pth'))
@@ -20,6 +20,12 @@ class AlexNet1(BasicModule):
 
     def forward(self, x):
         return self.model(x)
+
+    def get_optimizer(self, lr, weight_decay):
+        if not opt.pretrained:
+            return super(AlexNet1, self).get_optimizer(lr, weight_decay)
+        else:
+            return torch.optim.Adam(self.model.fc.parameters(), lr=lr, weight_decay=weight_decay)
 
 
 if __name__ == '__main__':

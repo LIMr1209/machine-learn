@@ -2,13 +2,14 @@ from io import BytesIO
 from torchvision import transforms as T
 import requests
 from PIL import Image
+from config import opt
 
 normalize = T.Normalize(mean=[0.485, 0.456, 0.406],
                         std=[0.229, 0.224, 0.225])
 
 transforms = T.Compose([
-    T.Resize(224),
-    T.CenterCrop(224),
+    T.Resize(opt.image_size),
+    T.CenterCrop(opt.image_size),
     T.ToTensor(),
     normalize
 ])

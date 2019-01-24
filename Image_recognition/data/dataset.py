@@ -3,6 +3,7 @@ from PIL import Image
 from torch.utils import data
 from torchvision import transforms as T
 from utils.imagefolder_splitter import ImageFolderSplitter
+from config import opt
 import cv2
 
 
@@ -38,8 +39,8 @@ class DatasetFromFilename(data.Dataset):
             if self.test or not self.train:
                 # 训练 测试
                 self.transforms = T.Compose([
-                    T.Resize(224),  # #缩放图片（Image）,保持长宽比不变，最短边为224像素
-                    T.CenterCrop(224),  # 在图片的中间区域进行裁剪
+                    T.Resize(opt.image_size),  # #缩放图片（Image）,保持长宽比不变，最短边为224像素
+                    T.CenterCrop(opt.image_size),  # 在图片的中间区域进行裁剪
                     T.ToTensor(),  # 转tensor
                     normalize  # 归一化
                 ])
@@ -47,7 +48,7 @@ class DatasetFromFilename(data.Dataset):
                 # 验证
                 self.transforms = T.Compose([
                     T.Resize(256),  # #缩放图片（Image）,保持长宽比不变，最短边为224像素
-                    T.RandomResizedCrop(224),  # 在一个随机的位置进行裁剪
+                    T.RandomResizedCrop(opt.image_size),  # 在一个随机的位置进行裁剪
                     T.RandomHorizontalFlip(),
                     T.ToTensor(),
                     normalize

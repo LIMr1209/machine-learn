@@ -55,7 +55,7 @@ def recognition(**kwargs):
             model.load_state_dict(checkpoint["state_dict"])  # 预加载模型
         model.to(opt.device)
         model.eval()
-        image = image.view(1, 3, 224, 224).to(opt.device)  # 转换image
+        image = image.view(1, 3, opt.image_size, opt.image_size).to(opt.device)  # 转换image
         outputs = model(image)
         result = {}
         for i in range(opt.num_classes):  # 计算各分类比重
@@ -119,17 +119,15 @@ def train(**kwargs):
             target = label.to(opt.device)
 
             score = model(input)
-            loss = criterion(score, target)  # 计算损失
-
+            # loss = criterion(score, target)  # 计算损失
+            loss = criterion(score[0], target)  # 计算损失   Inception3网络
             optimizer.zero_grad()  # 参数梯度设成0
             loss.backward()  # 反向传播
             optimizer.step()  # 更新参数
             # meters update and visualize
-            precision1_train, precision2_train = accuracy(score, target, topk=(1, 2))
+            # precision1_train, precision2_train = accuracy(score, target, topk=(1, 2))
+            precision1_train, precision2_train = accuracy(score[0], target, topk=(1, 2))  # Inception3网络
             train_losses.update(loss.item(), input.size(0))
-            a = precision1_train[0]
-            b = input.size(0)
-            c = precision1_train[0].item()
             train_top1.update(precision1_train[0].item(), input.size(0))
             train_progressor.current_loss = train_losses.avg
             train_progressor.current_top1 = train_top1.avg

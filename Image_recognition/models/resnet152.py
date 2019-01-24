@@ -48,10 +48,8 @@ class Bottleneck(nn.Module):
 def resnet152(pretrained=False, **kwargs):
     if pretrained:
         model = ResNet(Bottleneck, [3, 8, 36, 3], **kwargs)
-        # model.load_state_dict(torch.load('./checkpoint/resnet152-b121ed2d.pth'))
-        # 网络结构不对等
         pretrained_state_dict = torch.load(
-            './checkpoint/resnet152-b121ed2d.pth')  # load_url函数根据model_urls字典下载或导入相应的预训练模型
+            './Authority/resnet152-b121ed2d.pth')  # load_url函数根据model_urls字典下载或导入相应的预训练模型
         now_state_dict = model.state_dict()  # 返回model模块的字典
         pretrained_state_dict.pop('fc.weight')
         pretrained_state_dict.pop('fc.bias')
