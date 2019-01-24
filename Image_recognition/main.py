@@ -124,11 +124,13 @@ def train(**kwargs):
             optimizer.zero_grad()  # 参数梯度设成0
             loss.backward()  # 反向传播
             optimizer.step()  # 更新参数
-
             # meters update and visualize
             precision1_train, precision2_train = accuracy(score, target, topk=(1, 2))
             train_losses.update(loss.item(), input.size(0))
-            train_top1.update(precision1_train[0], input.size(0))
+            a = precision1_train[0]
+            b = input.size(0)
+            c = precision1_train[0].item()
+            train_top1.update(precision1_train[0].item(), input.size(0))
             train_progressor.current_loss = train_losses.avg
             train_progressor.current_top1 = train_top1.avg
             if (ii + 1) % opt.print_freq == 0:
@@ -137,7 +139,7 @@ def train(**kwargs):
                 else:
                     print('loss', train_losses.val)
             train_progressor()
-        train_progressor.done()  #
+            # train_progressor.done()  #
         # validate and visualize
         valid_loss = val(model, epoch, criterion, val_dataloader)  # 校验模型
         best_precision = valid_loss[1]
@@ -184,12 +186,12 @@ def val(model, epoch, criterion, dataloader):
             # 2.2.2 measure accuracy and record loss
             precision1, precision2 = accuracy(score, labels, topk=(1, 2))
             losses.update(loss.item(), input.size(0))
-            top1.update(precision1[0], input.size(0))
+            top1.update(precision1[0].item(), input.size(0))
             val_progressor.current_loss = losses.avg
             val_progressor.current_top1 = top1.avg
             val_progressor()
 
-        val_progressor.done()
+        # val_progressor.done()
         return [losses.avg, top1.avg]
 
 

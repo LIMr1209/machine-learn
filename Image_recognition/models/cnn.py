@@ -1,6 +1,5 @@
 import torch.nn as nn
 
-from cnn_finetune import make_model
 
 
 # CNN 卷积神经网络

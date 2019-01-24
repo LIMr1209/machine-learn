@@ -1,5 +1,6 @@
-from .alexnet import AlexNet
-from .resnet34 import ResNet34
-from .squeezenet import SqueezeNet
-# from torchvision.models import alexnet as AlexNet
-# from torchvision.models import resnet34
+from .alexnet import AlexNet1
+from .resnet152 import ResNet152
+from .squeezenet import SqueezeNet1_1
+from .inceptionv3 import InceptionV3
+from .densenet161 import DenseNet161
+from .denseNet201 import DenseNet201

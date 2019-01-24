@@ -6,51 +6,11 @@ import torchvision as tv
 import tqdm
 from model import NetG, NetD
 from torchnet.meter import AverageValueMeter
-
-
-class Config(object):
-    data_path = 'data/'  # 数据集存放路径
-    num_workers = 4  # 多进程加载数据所用的进程数
-    image_size = 96  # 图片尺寸
-    batch_size = 32
-    max_epoch = 4000
-    lr1 = 0.001  # 2e-4  # 生成器的学习率 2.7*2-4
-    lr2 = 0.001  # 2e-4  # 判别器的学习率
-    beta1 = 0.5  # Adam优化器的beta1参数
-    gpu = True  # 是否使用GPU
-    nz = 100  # 噪声维度
-    ngf = 64  # 生成器 map数
-    ndf = 64  # 判别器 map数
-    save_path = 'imgs/'  # 生成图片保存路径
-
-    vis = True  # 是否使用visdom可视化
-    env = 'opalus_generate'  # visdom的env
-    plot_every = 5  # 每间隔20 batch，visdom画图一次
-
-    d_every = 1  # 每1个batch训练一次判别器
-    g_every = 5  # 每5个batch训练一次生成器
-    save_every = 500  # 每10个epoch保存一次模型
-    netd_path = None
-    netg_path = None
-    # netd_path = 'checkpoints/netd_199.pth' #预训练判别模型
-    # netg_path = 'checkpoints/netg_199.pth' #预训练生成模型
-    # 只测试不训练
-    gen_img = 'result.png'
-    # 从512张生成的图片中保存最好的64张
-    gen_num = 64
-    gen_search_num = 512
-    gen_mean = 0  # 噪声的均值
-    gen_std = 1  # 噪声的方差
-
-
-opt = Config()
+from config import opt
 
 
 def train(**kwargs):
-    for k_, v_ in kwargs.items():
-        setattr(opt, k_, v_)
-
-    device = t.device('cuda') if opt.gpu else t.device('cpu')
+    opt._parse(kwargs)
     if opt.vis:
         from visualize import Visualizer
         vis = Visualizer(opt.env)
@@ -78,20 +38,20 @@ def train(**kwargs):
         netd.load_state_dict(t.load(opt.netd_path, map_location=map_location))
     if opt.netg_path:
         netg.load_state_dict(t.load(opt.netg_path, map_location=map_location))
-    netd.to(device)
-    netg.to(device)
+    netd.to(opt.device)
+    netg.to(opt.device)
 
     # 定义优化器和损失
     optimizer_g = t.optim.Adam(netg.parameters(), opt.lr1, betas=(opt.beta1, 0.999))
     optimizer_d = t.optim.Adam(netd.parameters(), opt.lr2, betas=(opt.beta1, 0.999))
-    criterion = t.nn.BCELoss().to(device)
+    criterion = t.nn.BCELoss().to(opt.device)
 
     # 真图片label为1，假图片label为0
     # noises为生成网络的输入
-    true_labels = t.ones(opt.batch_size).to(device)  # 真
-    fake_labels = t.zeros(opt.batch_size).to(device)  # 假
-    fix_noises = t.randn(opt.batch_size, opt.nz, 1, 1).to(device)
-    noises = t.randn(opt.batch_size, opt.nz, 1, 1).to(device)
+    true_labels = t.ones(opt.batch_size).to(opt.device)  # 真
+    fake_labels = t.zeros(opt.batch_size).to(opt.device)  # 假
+    fix_noises = t.randn(opt.batch_size, opt.nz, 1, 1).to(opt.device)
+    noises = t.randn(opt.batch_size, opt.nz, 1, 1).to(opt.device)
 
     errord_meter = AverageValueMeter()
     errorg_meter = AverageValueMeter()
@@ -99,7 +59,7 @@ def train(**kwargs):
     epochs = range(opt.max_epoch)
     for epoch in iter(epochs):
         for ii, (img, _) in tqdm.tqdm(enumerate(dataloader)):
-            real_img = img.to(device)
+            real_img = img.to(opt.device)
 
             if ii % opt.d_every == 0:
                 # 训练判别器
@@ -156,20 +116,16 @@ def generate(**kwargs):
     随机生成动漫头像，并根据netd的分数选择较好的
     """
     with t.no_grad():
-        for k_, v_ in kwargs.items():
-            setattr(opt, k_, v_)
-
-        device = t.device('cuda') if opt.gpu else t.device('cpu')
-
+        opt._parse(kwargs)
         netg, netd = NetG(opt).eval(), NetD(opt).eval()
         noises = t.randn(opt.gen_search_num, opt.nz, 1, 1).normal_(opt.gen_mean, opt.gen_std)
-        noises = noises.to(device)
+        noises = noises.to(opt._parse(kwargs))
 
         map_location = lambda storage, loc: storage
         netd.load_state_dict(t.load(opt.netd_path, map_location=map_location))
         netg.load_state_dict(t.load(opt.netg_path, map_location=map_location))
-        netd.to(device)
-        netg.to(device)
+        netd.to(opt._parse(kwargs))
+        netg.to(opt._parse(kwargs))
 
         # 生成图片，并计算图片在判别器的分数
         fake_img = netg(noises)
