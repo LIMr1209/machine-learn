@@ -1,12 +1,10 @@
-import shutil
 import time
 
 import torch
 from config import opt
-import os
 
 
-# 仪表
+# 仪表盘
 class AverageMeter(object):
     """Computes and stores the average and current value"""
 
@@ -28,7 +26,6 @@ class AverageMeter(object):
 
 # 准确率
 def accuracy(output, target, topk=(1,)):
-    """Computes the accuracy over the k top predictions for the specified values of k"""
     with torch.no_grad():
         maxk = max(topk)
         batch_size = target.size(0)

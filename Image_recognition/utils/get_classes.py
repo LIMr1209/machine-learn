@@ -1,5 +1,6 @@
 import os
 
+
 # 获取目录下所有分类和图片数据
 def get_classes(path):
     class2num = {}

@@ -8,22 +8,22 @@ class DefaultConfig(object):
     env = 'opalus_recognltion'  # visdom 环境
     vis_port = 8097  # visdom 端口
     image_size = 224
-    model = 'ResNet152'  # 使用的模型，名字必须与models/__init__.py中的名字一致
+    model = 'AlexNet1'  # 使用的模型，名字必须与models/__init__.py中的名字一致
 
     data_root = "/home/tian/Desktop/spiders/design/design/spiders/image"  # 数据集存放路径
     # load_model_path = None  # 加载训练的模型的路径，为None代表不加载
-    load_model_path = 'checkpoint/ResNet152_0124_11-57-28.pth.tar'
+    load_model_path = 'checkpoint/AlexNet1_0125_18-08-46.pth.tar'
 
     batch_size = 16  # 每批训练数据的个数,显存不足,适当减少
     use_gpu = True  # user GPU or not
     num_workers = 4  # how many workers for loading data
     print_freq = 2  # print info every N batch
-    vis = False  # 是否使用visdom可视化
+    vis = True  # 是否使用visdom可视化
 
     cate_classes = get_classes(data_root)['class2num']  # 分类列表
     num_classes = len(cate_classes)  # 分类个数
-    pretrained = False  # 不加载预训练
-    # pretrained = True  # 加载预训练模型
+    # pretrained = False  # 不加载预训练
+    pretrained = True  # 加载预训练模型
 
     max_epoch = 10  # 学习次数
     lr = 0.001  # initial learning rate

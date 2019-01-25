@@ -3,7 +3,7 @@ import visdom
 import time
 import numpy as np
 
-
+# visdom 可视化工具
 class Visualizer(object):
     """
     封装了visdom的基本操作，但是你仍然可以通过`self.vis.function`

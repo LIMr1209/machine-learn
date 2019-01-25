@@ -1,6 +1,6 @@
 import sys
 
-
+# 进度条
 class ProgressBar(object):
     DEFAULT = "Progress: %(bar)s %(percent)3d%%"
 

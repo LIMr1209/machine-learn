@@ -20,7 +20,7 @@ def test(**kwargs):
         model = getattr(models, opt.model)()
         if opt.load_model_path:
             checkpoint = t.load(opt.load_model_path)
-            model.load_state_dict(checkpoint["state_dict"])
+            model.load_state_dict(checkpoint["state_dict"]) # 加载模型
         model.to(opt.device)
         model.eval()  # 把module设成测试模式，对Dropout和BatchNorm有影响
         # data
@@ -46,13 +46,13 @@ def test(**kwargs):
 
 
 def recognition(**kwargs):
-    with t.no_grad():
-        opt._parse(kwargs)  # 用来标志计算要被计算图隔离出去
+    with t.no_grad():   # 用来标志计算要被计算图隔离出去
+        opt._parse(kwargs)
         image = image_loader(opt.url)
         model = getattr(models, opt.model)()
         if opt.load_model_path:
             checkpoint = t.load(opt.load_model_path)
-            model.load_state_dict(checkpoint["state_dict"])  # 预加载模型
+            model.load_state_dict(checkpoint["state_dict"])  # 加载模型
         model.to(opt.device)
         model.eval()
         image = image.view(1, 3, opt.image_size, opt.image_size).to(opt.device)  # 转换image
@@ -68,7 +68,7 @@ def train(**kwargs):
     if opt.vis:
         vis = Visualizer(opt.env, port=opt.vis_port)  # 开启visdom 可视化
     previous_loss = 1e10  # 上次学习的loss
-    best_precision = 0
+    best_precision = 0  # 最好的精确度
     start_epoch = 0
     lr = opt.lr
     # step1: criterion and optimizer
@@ -119,14 +119,14 @@ def train(**kwargs):
             target = label.to(opt.device)
 
             score = model(input)
-            # loss = criterion(score, target)  # 计算损失
-            loss = criterion(score[0], target)  # 计算损失   Inception3网络
+            loss = criterion(score, target)  # 计算损失
+            # loss = criterion(score[0], target)  # 计算损失   Inception3网络
             optimizer.zero_grad()  # 参数梯度设成0
             loss.backward()  # 反向传播
             optimizer.step()  # 更新参数
             # meters update and visualize
-            # precision1_train, precision2_train = accuracy(score, target, topk=(1, 2))
-            precision1_train, precision2_train = accuracy(score[0], target, topk=(1, 2))  # Inception3网络
+            precision1_train, precision2_train = accuracy(score, target, topk=(1, 2))
+            # precision1_train, precision2_train = accuracy(score[0], target, topk=(1, 2))  # Inception3网络
             train_losses.update(loss.item(), input.size(0))
             train_top1.update(precision1_train[0].item(), input.size(0))
             train_progressor.current_loss = train_losses.avg
@@ -137,11 +137,11 @@ def train(**kwargs):
                 else:
                     print('loss', train_losses.val)
             train_progressor()
-            # train_progressor.done()  #
+        # train_progressor.done()  # 保存训练结果为txt
         # validate and visualize
         valid_loss = val(model, epoch, criterion, val_dataloader)  # 校验模型
         best_precision = valid_loss[1]
-        # is_best = valid_loss[1] > best_precision  # 准确率比较，如果此次比上次大　　保存模型
+        # is_best = valid_loss[1] > best_precision  # 精确度比较，如果此次比上次大　　保存模型
         # best_precision = max(valid_loss[1], best_precision)
         # if is_best:
         model.save({
@@ -189,7 +189,7 @@ def val(model, epoch, criterion, dataloader):
             val_progressor.current_top1 = top1.avg
             val_progressor()
 
-        # val_progressor.done()
+        # val_progressor.done() # 保存校验结果为txt
         return [losses.avg, top1.avg]
 
 

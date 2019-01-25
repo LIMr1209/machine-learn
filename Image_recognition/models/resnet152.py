@@ -51,11 +51,14 @@ def resnet152(pretrained=False, **kwargs):
         pretrained_state_dict = torch.load(
             './Authority/resnet152-b121ed2d.pth')  # load_url函数根据model_urls字典下载或导入相应的预训练模型
         now_state_dict = model.state_dict()  # 返回model模块的字典
-        pretrained_state_dict.pop('fc.weight')
+        pretrained_state_dict.pop('fc.weight')  # 排除全连接层的参数(全连接层返回分类个数)
         pretrained_state_dict.pop('fc.bias')
         now_state_dict.update(pretrained_state_dict)
         model.load_state_dict(
-            now_state_dict)  # 最后通过调用model的load_state_dict方法用预训练的模型参数来初始化你构建的网络结构，这个方法就是PyTorch中通用的用一个模型的参数初始化另一个模型的层的操作。load_state_dict方法还有一个重要的参数是strict，该参数默认是True，表示预训练模型的层和你的网络结构层严格对应相等（比如层名和维度）
+            now_state_dict)
+        # 最后通过调用model的load_state_dict方法用预训练的模型参数来初始化你构建的网络结构，
+        # 这个方法就是PyTorch中通用的用一个模型的参数初始化另一个模型的层的操作。load_state_dict方法还有一个重要的参数是strict，
+        # 该参数默认是True，表示预训练模型的层和你的网络结构层严格对应相等（比如层名和维度）
         return model
     return ResNet(Bottleneck, [3, 8, 36, 3], **kwargs)
 

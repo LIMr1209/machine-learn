@@ -1,10 +1,8 @@
-# coding:utf8
 import os
-import ipdb
 import torch as t
 import torchvision as tv
 import tqdm
-from model import NetG, NetD
+from models import NetG, NetD
 from torchnet.meter import AverageValueMeter
 from config import opt
 
@@ -12,7 +10,7 @@ from config import opt
 def train(**kwargs):
     opt._parse(kwargs)
     if opt.vis:
-        from visualize import Visualizer
+        from utils.visualize import Visualizer
         vis = Visualizer(opt.env)
 
     # 数据
