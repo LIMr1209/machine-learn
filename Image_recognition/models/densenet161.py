@@ -46,7 +46,7 @@ class DenseNet161(BasicModule):
         if not opt.pretrained:
             return super(DenseNet161, self).get_optimizer(lr, weight_decay)
         else:
-            return torch.optim.Adam(self.model.fc.parameters(), lr=lr, weight_decay=weight_decay)
+            return torch.optim.Adam(self.model.classifier.parameters(), lr=lr, weight_decay=weight_decay)
 
 
 if __name__ == '__main__':
