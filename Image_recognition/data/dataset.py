@@ -62,7 +62,7 @@ class DatasetFromFilename(data.Dataset):
         # img = cv2.imread(img_path)
         # img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
         data = Image.open(img_path)
-        data = data.convert("RGB")  # 有4通道图片转化为长通道
+        data = data.convert("RGB")  # 如果有4通道图片转化为3通道
         data = self.transforms(data)
         return data, label  # 返回数据级标签
 
