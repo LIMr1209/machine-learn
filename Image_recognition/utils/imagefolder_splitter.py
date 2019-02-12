@@ -25,4 +25,7 @@ class ImageFolderSplitter:
 
 
 if __name__ == '__main__':
-    splitter = ImageFolderSplitter(r"C:\Users\aaa10\Desktop\spiders\design\design\spiders\image")
+    splitter = ImageFolderSplitter('/home/tian/Desktop/spiders/design/design/spiders/image')
+    x_train, y_train = splitter.getTrainingDataset()
+    x_valid, y_valid = splitter.getValidationDataset()
+    print('11')

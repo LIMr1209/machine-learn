@@ -27,7 +27,7 @@ class DatasetFromFilename(data.Dataset):
                 self.imgs = self.imgs[:int(0.7 * num)]
                 self.labels = self.labels[:int(0.7 * num)]
             else:  # 验证数据
-                self.imgs = self.imgs[int(0.7 * num):]
+                self.imgs = self.imgs[:int(0.7 * num)]
                 self.labels = self.labels[:int(0.7 * num)]
 
         if transforms is None:  # 转化器 图片转tensor
@@ -71,7 +71,7 @@ class DatasetFromFilename(data.Dataset):
 
 
 if __name__ == '__main__':
-    img = DatasetFromFilename(r'/home/tian/Desktop/spiders/design/design/spiders/image_test')
-    for i, (img, label) in enumerate(img):
-        print(img.size())
-        print(label)
+    img = DatasetFromFilename(r'/home/tian/Desktop/spiders/design/design/spiders/image', test=True)
+    splitter = ImageFolderSplitter('/home/tian/Desktop/spiders/design/design/spiders/image')
+    x_train, y_train = splitter.getTrainingDataset()
+    x_valid, y_valid = splitter.getValidationDataset()

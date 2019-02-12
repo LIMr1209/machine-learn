@@ -20,7 +20,7 @@ def test(**kwargs):
         model = getattr(models, opt.model)()
         if opt.load_model_path:
             checkpoint = t.load(opt.load_model_path)
-            model.load_state_dict(checkpoint["state_dict"]) # 加载模型
+            model.load_state_dict(checkpoint["state_dict"])  # 加载模型
         model.to(opt.device)
         model.eval()  # 把module设成测试模式，对Dropout和BatchNorm有影响
         # data
@@ -46,7 +46,7 @@ def test(**kwargs):
 
 
 def recognition(**kwargs):
-    with t.no_grad():   # 用来标志计算要被计算图隔离出去
+    with t.no_grad():  # 用来标志计算要被计算图隔离出去
         opt._parse(kwargs)
         image = image_loader(opt.url)
         model = getattr(models, opt.model)()
@@ -112,11 +112,11 @@ def train(**kwargs):
         train_progressor = ProgressBar(mode="Train  ", epoch=epoch, total_epoch=opt.max_epoch,
                                        model_name=opt.model,
                                        total=len(train_dataloader))
-        for ii, (data, label) in enumerate(train_dataloader):
+        for ii, (data, labels) in enumerate(train_dataloader):
             train_progressor.current = ii
             # train model
             input = data.to(opt.device)
-            target = label.to(opt.device)
+            target = labels.to(opt.device)
 
             score = model(input)
             loss = criterion(score, target)  # 计算损失
@@ -125,7 +125,7 @@ def train(**kwargs):
             loss.backward()  # 反向传播
             optimizer.step()  # 更新参数
             # meters update and visualize
-            precision1_train, precision2_train = accuracy(score, target, topk=(1, 2))
+            precision1_train, precision2_train = accuracy(score, target, topk=(1, 2))  # top1 和 top2 的准确率
             # precision1_train, precision2_train = accuracy(score[0], target, topk=(1, 2))  # Inception3网络
             train_losses.update(loss.item(), input.size(0))
             train_top1.update(precision1_train[0].item(), input.size(0))
@@ -140,18 +140,17 @@ def train(**kwargs):
         # train_progressor.done()  # 保存训练结果为txt
         # validate and visualize
         valid_loss = val(model, epoch, criterion, val_dataloader)  # 校验模型
-        best_precision = valid_loss[1]
-        # is_best = valid_loss[1] > best_precision  # 精确度比较，如果此次比上次大　　保存模型
-        # best_precision = max(valid_loss[1], best_precision)
-        # if is_best:
-        model.save({
-            "epoch": epoch + 1,
-            "model_name": opt.model,
-            "state_dict": model.state_dict(),
-            "best_precision": best_precision,
-            "optimizer": optimizer.state_dict(),
-            "valid_loss": valid_loss,
-        })  # 保存模型
+        is_best = valid_loss[1] > best_precision  # 精确度比较，如果此次比上次大　　保存模型
+        best_precision = max(valid_loss[1], best_precision)
+        if is_best:
+            model.save({
+                "epoch": epoch + 1,
+                "model_name": opt.model,
+                "state_dict": model.state_dict(),
+                "best_precision": best_precision,
+                "optimizer": optimizer.state_dict(),
+                "valid_loss": valid_loss,
+            })  # 保存模型
         # update learning rate
         # 如果训练误差比上次大　降低学习效率
         if train_losses.val > previous_loss:
@@ -182,13 +181,12 @@ def val(model, epoch, criterion, dataloader):
             loss = criterion(score, labels)
 
             # 2.2.2 measure accuracy and record loss
-            precision1, precision2 = accuracy(score, labels, topk=(1, 2))
+            precision1, precision2 = accuracy(score, labels, topk=(1, 2))  # top1 和 top2 的准确率
             losses.update(loss.item(), input.size(0))
             top1.update(precision1[0].item(), input.size(0))
             val_progressor.current_loss = losses.avg
             val_progressor.current_top1 = top1.avg
             val_progressor()
-
         # val_progressor.done() # 保存校验结果为txt
         return [losses.avg, top1.avg]
 

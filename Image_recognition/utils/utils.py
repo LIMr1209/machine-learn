@@ -29,9 +29,9 @@ def accuracy(output, target, topk=(1,)):
     with torch.no_grad():
         maxk = max(topk)
         batch_size = target.size(0)
-
-        _, pred = output.topk(maxk, 1, True, True)
-        pred = pred.t()
+        # https: // pytorch - cn.readthedocs.io / zh / latest / package_references / torch /  # torchtopk
+        _, pred = output.topk(maxk, 1, True, True)  # 返回分值最大的两类的index
+        pred = pred.t()  # 转置
         correct = pred.eq(target.view(1, -1).expand_as(pred))
 
         res = []

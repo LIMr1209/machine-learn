@@ -4,5 +4,8 @@ __pycache__/
 !requirements.txt
 *.tar
 *.jpg
-
-
+!.gitignore
+*.pth
+*.csv
+*.png
+nohup.out

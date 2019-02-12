@@ -1,4 +1,0 @@
-autokeras=0.3.6
-pydot==1.3.0
-pygraphviz==1.3
-imutils==0.5.2
