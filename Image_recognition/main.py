@@ -113,7 +113,7 @@ def train(**kwargs):
                                        model_name=opt.model,
                                        total=len(train_dataloader))
         for ii, (data, labels) in enumerate(train_dataloader):
-            train_progressor.current = ii
+            train_progressor.current = ii+1
             # train model
             input = data.to(opt.device)
             target = labels.to(opt.device)
@@ -139,6 +139,7 @@ def train(**kwargs):
             train_progressor()
         # train_progressor.done()  # 保存训练结果为txt
         # validate and visualize
+        print('')
         valid_loss = val(model, epoch, criterion, val_dataloader)  # 校验模型
         is_best = valid_loss[1] > best_precision  # 精确度比较，如果此次比上次大　　保存模型
         best_precision = max(valid_loss[1], best_precision)
@@ -174,7 +175,7 @@ def val(model, epoch, criterion, dataloader):
         val_progressor = ProgressBar(mode="Val  ", epoch=epoch, total_epoch=opt.max_epoch, model_name=opt.model,
                                      total=len(dataloader))
         for ii, (data, labels) in enumerate(dataloader):
-            val_progressor.current = ii
+            val_progressor.current = ii+1
             input = data.to(opt.device)
             labels = labels.to(opt.device)
             score = model(input)
@@ -187,6 +188,7 @@ def val(model, epoch, criterion, dataloader):
             val_progressor.current_loss = losses.avg
             val_progressor.current_top1 = top1.avg
             val_progressor()
+        print('')
         # val_progressor.done() # 保存校验结果为txt
         return [losses.avg, top1.avg]
 

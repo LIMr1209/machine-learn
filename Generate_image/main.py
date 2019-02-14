@@ -111,7 +111,7 @@ def train(**kwargs):
 
 def generate(**kwargs):
     """
-    随机生成动漫头像，并根据netd的分数选择较好的
+    随机生成图像，并根据netd的分数选择较好的
     """
     with t.no_grad():
         opt._parse(kwargs)
