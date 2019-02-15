@@ -97,14 +97,14 @@ def train(**kwargs):
         model.load_state_dict(checkpoint["state_dict"])
         optimizer.load_state_dict(checkpoint["optimizer"])
     model.to(opt.device)
-    # step4: data
-    train_data = DatasetFromFilename(opt.data_root, train=True)  # 训练集
-    val_data = DatasetFromFilename(opt.data_root, train=False)  # 验证集
-    train_dataloader = DataLoader(train_data, opt.batch_size, shuffle=True, num_workers=opt.num_workers)
-    val_dataloader = DataLoader(val_data, opt.batch_size, shuffle=False, num_workers=opt.num_workers)
 
     # train
     for epoch in range(start_epoch, opt.max_epoch):
+        # step4: data train 每次训练重新获取数据(打乱)
+        train_data = DatasetFromFilename(opt.data_root, train=True)  # 训练集
+        val_data = DatasetFromFilename(opt.data_root, train=False)  # 验证集
+        train_dataloader = DataLoader(train_data, opt.batch_size, shuffle=True, num_workers=opt.num_workers)
+        val_dataloader = DataLoader(val_data, opt.batch_size, shuffle=False, num_workers=opt.num_workers)
         model.train()
         train_losses.reset()  # 重置仪表
         train_top1.reset()  # 重置仪表
@@ -113,7 +113,7 @@ def train(**kwargs):
                                        model_name=opt.model,
                                        total=len(train_dataloader))
         for ii, (data, labels) in enumerate(train_dataloader):
-            train_progressor.current = ii+1
+            train_progressor.current = ii + 1
             # train model
             input = data.to(opt.device)
             target = labels.to(opt.device)
@@ -175,7 +175,7 @@ def val(model, epoch, criterion, dataloader):
         val_progressor = ProgressBar(mode="Val  ", epoch=epoch, total_epoch=opt.max_epoch, model_name=opt.model,
                                      total=len(dataloader))
         for ii, (data, labels) in enumerate(dataloader):
-            val_progressor.current = ii+1
+            val_progressor.current = ii + 1
             input = data.to(opt.device)
             labels = labels.to(opt.device)
             score = model(input)

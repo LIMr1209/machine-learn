@@ -27,8 +27,8 @@ class DatasetFromFilename(data.Dataset):
                 self.imgs = self.imgs[:int(0.7 * num)]
                 self.labels = self.labels[:int(0.7 * num)]
             else:  # 验证数据
-                self.imgs = self.imgs[:int(0.7 * num)]
-                self.labels = self.labels[:int(0.7 * num)]
+                self.imgs = self.imgs[int(0.7 * num):]
+                self.labels = self.labels[int(0.7 * num):]
 
         if transforms is None:  # 转化器 图片转tensor
             # 将tensor正则化   mean 均值 std 方差 Normalized_image=(image-mean)/std

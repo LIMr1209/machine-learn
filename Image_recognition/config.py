@@ -8,7 +8,7 @@ class DefaultConfig(object):
     env = 'opalus_recognltion'  # visdom 环境
     vis_port = 8097  # visdom 端口
     image_size = 224  # 图片尺寸
-    model = 'ResNet152'  # 使用的模型，名字必须与models/__init__.py中的名字一致
+    model = 'AlexNet1'  # 使用的模型，名字必须与models/__init__.py中的名字一致
 
     data_root = "/home/tian/Desktop/spiders/design/design/spiders/image"  # 数据集存放路径
     load_model_path = None  # 加载训练的模型的路径，为None代表不加载
