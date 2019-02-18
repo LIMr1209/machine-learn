@@ -3,8 +3,6 @@ from torch.utils import data
 from torchvision import transforms as T
 from utils.imagefolder_splitter import ImageFolderSplitter
 from config import opt
-import cv2
-
 
 class DatasetFromFilename(data.Dataset):
 

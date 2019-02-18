@@ -8,11 +8,11 @@ class DefaultConfig(object):
     env = 'opalus_recognltion'  # visdom 环境
     vis_port = 8097  # visdom 端口
     image_size = 224  # 图片尺寸
-    model = 'AlexNet1'  # 使用的模型，名字必须与models/__init__.py中的名字一致
+    model = 'ResNet152'  # 使用的模型，名字必须与models/__init__.py中的名字一致
 
-    data_root = "/home/tian/Desktop/spiders/design/design/spiders/image"  # 数据集存放路径
-    load_model_path = None  # 加载训练的模型的路径，为None代表不加载
-    # load_model_path = './checkpoint/AlexNet1_0214_10-06-50.pth.tar'
+    data_root = "/home/tian/Desktop/image"  # 数据集存放路径
+    # load_model_path = None  # 加载训练的模型的路径，为None代表不加载
+    load_model_path = './checkpoint/ResNet152_0218_15-09-29.pth.tar'
 
     batch_size = 16  # 每批训练数据的个数,显存不足,适当减少
     use_gpu = True  # user GPU or not
@@ -25,16 +25,14 @@ class DefaultConfig(object):
     # pretrained = False  # 不加载预训练
     pretrained = True  # 加载预训练模型
 
-    max_epoch = 20  # 学习次数
+    max_epoch = 10  # 学习次数
     lr = 0.001  # initial learning rate
     lr_decay = 0.5  # when val_loss increase, lr = lr*lr_decay
     weight_decay = 0e-5  # 损失函数
-    # url = 'https://ss3.bdstatic.com/70cFv8Sh_Q1YnxGkpoWK1HF6hhy/it/u=614134999,3540271868&fm=27&gp=0.jpg'  # 识别图片地址
-    # url = 'https://ss1.bdstatic.com/70cFuXSh_Q1YnxGkpoWK1HF6hhy/it/u=688429408,3192272581&fm=27&gp=0.jpg'
-    url = 'https://ss1.bdstatic.com/70cFvXSh_Q1YnxGkpoWK1HF6hhy/it/u=1515206672,3808938099&fm=27&gp=0.jpg'
+    # url = 'https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=3566530008,2476414322&fm=26&gp=0.jpg'
+    url = 'https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=3991056974,389418150&fm=26&gp=0.jpg'
 
-    # url = 'https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=3211343338,3677737612&fm=27&gp=0.jpg'
-    # url = 'https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=1173573129,2720567755&fm=27&gp=0.jpg'
+
 
     def _parse(self, kwargs):
         """
