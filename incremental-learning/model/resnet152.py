@@ -1,8 +1,9 @@
 from .basic_module import BasicModule
 import torch.nn as nn
-from config import opt
 from torchvision.models import ResNet
 import torch
+import torch.functional as F
+pretrained = False
 
 
 class Bottleneck(nn.Module):
@@ -66,7 +67,7 @@ class ResNet152(BasicModule):
     def __init__(self):
         super(ResNet152, self).__init__()
         self.model_name = 'ResNet152'
-        self.model = resnet152(pretrained=opt.pretrained, num_classes=opt.num_classes)
+        self.model = resnet152(pretrained, num_classes=1000)
 
     def forward(self, x):
         x = self.model.conv1(x)
@@ -82,11 +83,11 @@ class ResNet152(BasicModule):
         x = self.model.avgpool(x)
         x = x.view(x.size(0), -1)
         x = self.model.fc(x)
-
+        # return F.log_softmax(x, dim=1)
         return x
 
     def get_optimizer(self, lr, weight_decay):
-        if not opt.pretrained:
+        if not pretrained:
             return super(ResNet152, self).get_optimizer(lr, weight_decay)
         else:
             return torch.optim.Adam(self.model.fc.parameters(), lr=lr, weight_decay=weight_decay)
@@ -97,4 +98,4 @@ if __name__ == '__main__':
     input = torch.autograd.Variable(torch.randn(16, 3, 224, 224)).to(torch.device('cuda'))
     output = a(input)
     print(output.size())
-    torch.save(a.state_dict(),'haha.pth')
+    torch.save(a.state_dict(), 'haha.pth')

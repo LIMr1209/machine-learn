@@ -8,4 +8,5 @@ __pycache__/
 *.pth
 *.csv
 *.png
+*.log
 nohup.out

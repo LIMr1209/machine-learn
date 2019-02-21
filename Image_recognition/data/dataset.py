@@ -4,6 +4,7 @@ from torchvision import transforms as T
 from utils.imagefolder_splitter import ImageFolderSplitter
 from config import opt
 
+
 class DatasetFromFilename(data.Dataset):
 
     def __init__(self, root, transforms=None, train=True, test=False):
@@ -69,7 +70,7 @@ class DatasetFromFilename(data.Dataset):
 
 
 if __name__ == '__main__':
-    img = DatasetFromFilename(r'/home/tian/Desktop/spiders/design/design/spiders/image', test=True)
-    splitter = ImageFolderSplitter('/home/tian/Desktop/spiders/design/design/spiders/image')
+    img = DatasetFromFilename(r'/home/tian/Desktop/image', test=True)
+    splitter = ImageFolderSplitter('/home/tian/Desktop/image')
     x_train, y_train = splitter.getTrainingDataset()
     x_valid, y_valid = splitter.getValidationDataset()

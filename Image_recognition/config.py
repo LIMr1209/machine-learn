@@ -11,14 +11,14 @@ class DefaultConfig(object):
     model = 'ResNet152'  # 使用的模型，名字必须与models/__init__.py中的名字一致
 
     data_root = "/home/tian/Desktop/image"  # 数据集存放路径
-    # load_model_path = None  # 加载训练的模型的路径，为None代表不加载
-    load_model_path = './checkpoint/ResNet152_0218_15-09-29.pth.tar'
+    load_model_path = None  # 加载训练的模型的路径，为None代表不加载
+    # load_model_path = './checkpoint/ResNet152_0218_15-09-29.pth.tar'
 
     batch_size = 16  # 每批训练数据的个数,显存不足,适当减少
     use_gpu = True  # user GPU or not
     num_workers = 4  # how many workers for loading data
     print_freq = 2  # print info every N batch
-    vis = True  # 是否使用visdom可视化
+    vis = False  # 是否使用visdom可视化
 
     cate_classes = get_classes(data_root)['class2num']  # 分类列表
     num_classes = len(cate_classes)  # 分类个数
