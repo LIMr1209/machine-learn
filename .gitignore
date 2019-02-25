@@ -3,6 +3,7 @@ __pycache__/
 *.txt
 !requirements.txt
 *.tar
+*.tar.gZ
 *.jpg
 !.gitignore
 *.pth

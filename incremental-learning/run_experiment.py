@@ -11,8 +11,8 @@ import model
 import trainer
 
 parser = argparse.ArgumentParser(description='iCarl2.0')
-parser.add_argument('--batch-size', type=int, default=64, metavar='N',
-                    help='input batch size for training (default: 64)')
+parser.add_argument('--batch-size', type=int, default=16, metavar='N',
+                    help='input batch size for training (default: 16)')
 parser.add_argument('--lr', type=float, default=2.0, metavar='LR',
                     help='learning rate (default: 2.0). Note that lr is decayed by args.gamma parameter args.schedule ')
 parser.add_argument('--schedule', type=int, nargs='+', default=[45, 60, 68],
@@ -51,8 +51,9 @@ parser.add_argument('--unstructured-size', type=int, default=0,
 parser.add_argument('--alphas', type=float, nargs='+', default=[1.0],
                     help='Weight given to new classes vs old classes in the loss; high value of alpha will increase perfomance on new classes at the expense of older classes. Dynamic threshold moving makes the system more robust to changes in this parameter')
 parser.add_argument('--decay', type=float, default=0.00005, help='Weight decay (L2 penalty).')
-parser.add_argument('--step-size', type=int, default=10, help='How many classes to add in each increment') # 每个增量中要添加多少类
-parser.add_argument('--T', type=float, default=1, help='Tempreture used for softening the targets') # 软化目标所用的温度
+parser.add_argument('--step-size', type=int, default=10,
+                    help='How many classes to add in each increment')  # 每个增量中要添加多少类
+parser.add_argument('--T', type=float, default=1, help='Tempreture used for softening the targets')  # 软化目标所用的温度
 parser.add_argument('--memory-budgets', type=int, nargs='+', default=[2000],
                     help='How many images can we store at max. 0 will result in fine-tuning')
 parser.add_argument('--epochs-class', type=int, default=70, help='Number of epochs for each increment')
@@ -62,7 +63,7 @@ parser.add_argument('--lwf', action='store_true', default=False,
                          '("Learning with Forgetting," Zhizhong Li, Derek Hoiem)')
 parser.add_argument('--no-nl', action='store_true', default=False,
                     help='No Normal Loss. Only uses the distillation loss to train the new model on old classes (Normal loss is used for new classes however')
-# 无正常损失。只使用蒸馏损失来训练旧类的新模型（但是新类使用正常损失
+# 无正常损失。只使用蒸馏损失来训练旧类的新模型（但是新类使用正常损失)
 parser.add_argument('--old', action='store_true', default=False,
                     help='Preloading the old model default false')
 
@@ -277,5 +278,3 @@ for class_group in range(0, dataset.classes, args.step_size):
     # Store the resutls in the my_experiment object; this object should contain all the information required to reproduce the results.
     x.append(class_group + args.step_size)
     # 将结果存储在实验对象中；此对象应包含重现结果所需的所有信息。
-
-

@@ -12,7 +12,7 @@ class DefaultConfig(object):
 
     data_root = "/home/tian/Desktop/image"  # 数据集存放路径
     load_model_path = None  # 加载训练的模型的路径，为None代表不加载
-    # load_model_path = './checkpoint/ResNet152_0218_15-09-29.pth.tar'
+    # load_model_path = './checkpoint/ResNet152_0221_17-28-30.pth.tar'
 
     batch_size = 16  # 每批训练数据的个数,显存不足,适当减少
     use_gpu = True  # user GPU or not
@@ -25,12 +25,12 @@ class DefaultConfig(object):
     # pretrained = False  # 不加载预训练
     pretrained = True  # 加载预训练模型
 
-    max_epoch = 10  # 学习次数
+    max_epoch = 15  # 学习次数
     lr = 0.001  # initial learning rate
     lr_decay = 0.5  # when val_loss increase, lr = lr*lr_decay
     weight_decay = 0e-5  # 损失函数
     # url = 'https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=3566530008,2476414322&fm=26&gp=0.jpg'
-    url = 'https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=3991056974,389418150&fm=26&gp=0.jpg'
+    url = 'https://ss2.bdstatic.com/70cFvnSh_Q1YnxGkpoWK1HF6hhy/it/u=304436698,3711210886&fm=26&gp=0.jpg'
 
 
 

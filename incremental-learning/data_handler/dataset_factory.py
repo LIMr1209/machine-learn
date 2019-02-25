@@ -20,7 +20,7 @@ class DatasetFactory:
         elif name == "CIFAR10":
             return data.CIFAR10()
         elif name == 'custom':
-            return data
+            return data.Custom()
         else:
             print("Unsupported Dataset")
             assert False

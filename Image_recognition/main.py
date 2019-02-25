@@ -135,8 +135,6 @@ def train(**kwargs):
             if (ii + 1) % opt.print_freq == 0:
                 if opt.vis:
                     vis.plot('loss', train_losses.val)  # 绘图
-                else:
-                    print('loss', train_losses.val)
             train_progressor()
         # train_progressor.done()  # 保存训练结果为txt
         # validate and visualize

@@ -6,9 +6,8 @@
 from PIL import Image
 from torchvision import datasets, transforms
 import torch
-import numpy
-
-from utils.imagefolder_splitter import ImageFolderSplitter
+import numpy as np
+import os
 
 
 # To incdude a new Dataset, inherit from Dataset and add all the Dataset specific parameters here.
@@ -50,7 +49,7 @@ class MNIST(Dataset):
         self.test_data = datasets.MNIST("data/mnist", train=False, transform=self.test_transform, download=False)
 
     def get_random_instance(self):
-        instance = torch.from_numpy(numpy.random.uniform(low=-1, high=1, size=(32, 32))).float()
+        instance = torch.from_numpy(np.random.uniform(low=-1, high=1, size=(32, 32))).float()
         instance.unsqueeze_(0)
         return instance
 
@@ -100,20 +99,21 @@ class CIFAR10(Dataset):
         self.test_transform = transforms.Compose(
             [transforms.ToTensor(), ])
 
-        self.train_data = datasets.CIFAR10("../data", train=True, transform=self.train_transform, download=False)
+        self.train_data = datasets.CIFAR10("/home/tian/Desktop/data", train=True, transform=self.train_transform,
+                                           download=False)
 
-        self.test_data = datasets.CIFAR10("../data", train=False, transform=self.test_transform, download=False)
+        self.test_data = datasets.CIFAR10("/home/tian/Desktop/data", train=False, transform=self.test_transform,
+                                          download=False)
 
 
 class Custom:
-    def __init__(self, path='/home/tian/Desktop/image'):
-        spitter = ImageFolderSplitter(path)
-        self.classes = spitter.class_num
+    def __init__(self, path='/home/tian/Desktop/image_resize/'):
+        self.classes = 9
         self.name = 'custom'
         self.train_data = None
         self.test_data = None
-        self.labels_per_class_train = len(spitter.x_train)
-        self.labels_per_class_test = len(spitter.x_valid)
+        self.labels_per_class_train = 200
+        self.labels_per_class_test = 100
 
         normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                          std=[0.229, 0.224, 0.225])
@@ -132,31 +132,57 @@ class Custom:
             normalize
         ])
 
-        self.train_data = trans(spitter.x_train, spitter.y_train, self.labels_per_class_train)
-
-        self.test_data = trans(spitter.x_valid, spitter.y_valid, self.labels_per_class_test)
+        self.train_data, self.test_data = get_dataset(path)
 
 
-def trans(data, label, length):
-    class A:
-        def __init__(self):
-            self.train_data = numpy.zeros(shape=(length,32,32,3))
-            self.train_labels = label
-            for i,j in enumerate(data):
-                img = Image.open(j)
-                img = img.convert("RGB")  # 如果有4通道图片转化为3通道
-                img = numpy.array(img)
-                self.train_data[i] = img
+class TrainDate:
+    def __init__(self, train_data, train_labels):
+        self.train_data = train_data
+        self.train_labels = train_labels
 
-    return A()
+
+class TestData:
+    def __init__(self, test_data, test_labels):
+        self.test_data = test_data
+        self.test_labels = test_labels
+
+
+def get_dataset(path):
+    num_class = 9
+    num_sample_train = 200
+    num_sample_test = 100
+    W = 224
+    H = 224
+    C = 3
+    train_data = np.zeros((num_class * num_sample_train, W, H, C), dtype=np.uint8)
+    test_data = np.zeros((num_class * num_sample_test, W, H, C), dtype=np.uint8)
+    train_labels = []
+    test_labels = []
+    for i in range(num_class):
+        train_labels.extend([i] * num_sample_train)
+        test_labels.extend([i] * num_sample_test)
+    train_i = 0
+    test_i = 0
+    for root, dirs, files in os.walk(path+'train'):
+        if root == path+'train':
+            label_list = dirs
+            print(label_list)
+        for file in files:
+            img = np.array(Image.open(root + '/' + file))
+            train_data[train_i] = img
+            train_i += 1
+    for root, dirs, files in os.walk(path+'test'):
+        for file in files:
+            img = np.array(Image.open(root + '/' + file))
+            test_data[test_i] = img
+            test_i += 1
+    return TrainDate(train_data, train_labels), TestData(test_data, test_labels)
 
 
 if __name__ == '__main__':
-    # MNIST()
-    # CIFAR100()
-    a = CIFAR10()
     c = Custom()
-    d = a.train_data
-    e = c.train_data
-    b = 1
-
+    numpy = c.train_data.train_data[200]  # 0-199 第一类  200-399 第二类
+    print(c.train_data.train_labels[200])
+    print(numpy.shape)
+    img = Image.fromarray(numpy)
+    img.show()
