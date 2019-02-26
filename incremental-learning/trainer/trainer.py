@@ -189,13 +189,13 @@ class Trainer(GenericTrainer):
             if self.args.cuda:
                 y_onehot = y_onehot.to(torch.device('cuda'))
 
-            y_onehot.zero_()  # 用0 填充 张良
-            target_normal_loss.unsqueeze_(1)  # 增加一维 64,1
+            y_onehot.zero_()  # 用0 填充 张亮
+            target_normal_loss.unsqueeze_(1)  # 增加一维 16,1
             y_onehot.scatter_(1, target_normal_loss, 1)  # 将 y_onehot 对应 target_normal_loss 索引位置的值设为1
 
             output = self.model(data_normal_loss)
-            self.dynamic_threshold += np.sum(y_onehot.cpu().numpy(), 0)  # 原(64,100) 将0维度的加起来 现 (100,) numpy 对象
-            loss = F.kl_div(output, y_onehot)
+            self.dynamic_threshold += np.sum(y_onehot.cpu().numpy(), 0)  # 原(16,1000) 将0维度的加起来 现 (1000,) numpy 对象
+            loss = F.kl_div(output, y_onehot)   # The size of tensor a (9) must match the size of tensor b (1000) at non-singleton dimension 1
 
             myT = self.args.T
 

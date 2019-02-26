@@ -15,7 +15,7 @@ parser.add_argument('--batch-size', type=int, default=16, metavar='N',
                     help='input batch size for training (default: 16)')
 parser.add_argument('--lr', type=float, default=2.0, metavar='LR',
                     help='learning rate (default: 2.0). Note that lr is decayed by args.gamma parameter args.schedule ')
-parser.add_argument('--schedule', type=int, nargs='+', default=[45, 60, 68],
+parser.add_argument('--schedule', type=int, nargs='+', default=[5, 7, 9],
                     help='Decrease learning rate at these epochs.')
 parser.add_argument('--gammas', type=float, nargs='+', default=[0.2, 0.2, 0.2],
                     help='LR is multiplied by gamma on schedule, number of gammas should be equal to schedule')
@@ -51,13 +51,13 @@ parser.add_argument('--unstructured-size', type=int, default=0,
 parser.add_argument('--alphas', type=float, nargs='+', default=[1.0],
                     help='Weight given to new classes vs old classes in the loss; high value of alpha will increase perfomance on new classes at the expense of older classes. Dynamic threshold moving makes the system more robust to changes in this parameter')
 parser.add_argument('--decay', type=float, default=0.00005, help='Weight decay (L2 penalty).')
-parser.add_argument('--step-size', type=int, default=10,
+parser.add_argument('--step-size', type=int, default=3,
                     help='How many classes to add in each increment')  # 每个增量中要添加多少类
 parser.add_argument('--T', type=float, default=1, help='Tempreture used for softening the targets')  # 软化目标所用的温度
 parser.add_argument('--memory-budgets', type=int, nargs='+', default=[2000],
                     help='How many images can we store at max. 0 will result in fine-tuning')
-parser.add_argument('--epochs-class', type=int, default=70, help='Number of epochs for each increment')
-parser.add_argument('--dataset', default="CIFAR100", help='Dataset to be used; example CIFAR, MNIST')
+parser.add_argument('--epochs-class', type=int, default=10, help='Number of epochs for each increment')
+parser.add_argument('--dataset', default="custom", help='Dataset to be used; example CIFAR, MNIST')
 parser.add_argument('--lwf', action='store_true', default=False,
                     help='Use learning without forgetting. Ignores memory-budget '
                          '("Learning with Forgetting," Zhizhong Li, Derek Hoiem)')

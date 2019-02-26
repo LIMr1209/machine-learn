@@ -40,7 +40,7 @@ class NearestMeanEvaluator():
     def __init__(self, cuda):
         self.cuda = cuda
         self.means = None
-        self.totalFeatures = np.zeros((100, 1))
+        self.totalFeatures = np.zeros((100, 1))  # 100 是类数目?  9?1000?
 
     def evaluate(self, model, loader, step_size=10, kMean=False):
         '''
@@ -52,7 +52,7 @@ class NearestMeanEvaluator():
         '''
         model.eval()
         if self.means is None:
-            self.means = np.zeros((100, model.featureSize))
+            self.means = np.zeros((100, model.featureSize))  # 100 是类数目?  9?1000?
         correct = 0
 
         for data, y, target in loader:
@@ -65,9 +65,9 @@ class NearestMeanEvaluator():
             result = torch.norm(result, 2, 2)
             if kMean:
                 result = result.cpu().numpy()
-                tempClassifier = np.zeros((len(result), int(100 / step_size)))
+                tempClassifier = np.zeros((len(result), int(100 / step_size)))  # 100 是类数目?  9?1000?
                 for outer in range(0, len(result)):
-                    for tempCounter in range(0, int(100 / step_size)):
+                    for tempCounter in range(0, int(100 / step_size)):   # 100 是类数目?  9?1000?
                         tempClassifier[outer, tempCounter] = np.sum(
                             result[tempCounter * step_size:(tempCounter * step_size) + step_size])
                 for outer in range(0, len(result)):
@@ -168,7 +168,7 @@ class softmax_evaluator():
     def __init__(self, cuda):
         self.cuda = cuda
         self.means = None
-        self.totalFeatures = np.zeros((100, 1))
+        self.totalFeatures = np.zeros((100, 1))    # 100 是类数目?  9?1000?
 
     def evaluate(self, model, loader, scale=None, thres=False, older_classes=None, step_size=10, descriptor=False,
                  falseDec=False):

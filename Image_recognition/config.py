@@ -32,8 +32,6 @@ class DefaultConfig(object):
     # url = 'https://ss0.bdstatic.com/70cFuHSh_Q1YnxGkpoWK1HF6hhy/it/u=3566530008,2476414322&fm=26&gp=0.jpg'
     url = 'https://ss2.bdstatic.com/70cFvnSh_Q1YnxGkpoWK1HF6hhy/it/u=304436698,3711210886&fm=26&gp=0.jpg'
 
-
-
     def _parse(self, kwargs):
         """
         根据字典kwargs 更新 config参数

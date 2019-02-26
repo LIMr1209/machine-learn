@@ -3,6 +3,7 @@ import torch.nn as nn
 from torchvision.models import ResNet
 import torch
 import torch.functional as F
+
 pretrained = False
 
 
@@ -70,21 +71,7 @@ class ResNet152(BasicModule):
         self.model = resnet152(pretrained, num_classes=1000)
 
     def forward(self, x):
-        x = self.model.conv1(x)
-        x = self.model.bn1(x)
-        x = self.model.relu(x)
-        x = self.model.maxpool(x)
-
-        x = self.model.layer1(x)
-        x = self.model.layer2(x)
-        x = self.model.layer3(x)
-        x = self.model.layer4(x)
-
-        x = self.model.avgpool(x)
-        x = x.view(x.size(0), -1)
-        x = self.model.fc(x)
-        # return F.log_softmax(x, dim=1)
-        return x
+        return self.model(x)
 
     def get_optimizer(self, lr, weight_decay):
         if not pretrained:
@@ -98,4 +85,3 @@ if __name__ == '__main__':
     input = torch.autograd.Variable(torch.randn(16, 3, 224, 224)).to(torch.device('cuda'))
     output = a(input)
     print(output.size())
-    torch.save(a.state_dict(), 'haha.pth')
