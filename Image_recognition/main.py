@@ -3,15 +3,15 @@ import torch as t
 import models
 from data.dataset import DatasetFromFilename
 from torch.utils.data import DataLoader
-# from utils.csv import write_csv
 from utils.image_loader import image_loader
 from utils.utils import AverageMeter, accuracy
 from utils.visualize import Visualizer
 from utils.progress_bar import ProgressBar
 from tqdm import tqdm
 
+seed = 1000
+t.cuda.manual_seed(seed)  # 随机数种子,当使用随机数时,关闭进程后再次生成和上次得一样
 
-# torch.cuda.manual_seed(seed)  #随机数种子,当使用随机数时,关闭进程后再次生成和上次得一样
 
 def test(**kwargs):
     with t.no_grad():

@@ -195,6 +195,7 @@ class Trainer(GenericTrainer):
 
             output = self.model(data_normal_loss)
             self.dynamic_threshold += np.sum(y_onehot.cpu().numpy(), 0)  # 原(16,1000) 将0维度的加起来 现 (1000,) numpy 对象
+            # 网络结构弄成100类? 100类训练一次? 但是以后101类怎么办
             loss = F.kl_div(output, y_onehot)   # The size of tensor a (9) must match the size of tensor b (1000) at non-singleton dimension 1
 
             myT = self.args.T
