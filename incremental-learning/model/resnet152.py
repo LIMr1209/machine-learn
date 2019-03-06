@@ -1,4 +1,4 @@
-from .basic_module import BasicModule
+# from .basic_module import BasicModule
 import torch.nn as nn
 from torchvision.models import ResNet
 import torch
@@ -64,11 +64,11 @@ def resnet152(pretrained=False, **kwargs):
     return ResNet(Bottleneck, [3, 8, 36, 3], **kwargs)
 
 
-class ResNet152(BasicModule):
+class ResNet152(nn.Module):
     def __init__(self):
         super(ResNet152, self).__init__()
         self.model_name = 'ResNet152'
-        self.model = resnet152(pretrained, num_classes=1000)
+        self.model = resnet152(pretrained, num_classes=200)
 
     def forward(self, x):
         return self.model(x)
@@ -83,5 +83,6 @@ class ResNet152(BasicModule):
 if __name__ == '__main__':
     a = ResNet152().to(torch.device('cuda'))
     input = torch.autograd.Variable(torch.randn(16, 3, 224, 224)).to(torch.device('cuda'))
+    b = a.model.fc
     output = a(input)
     print(output.size())

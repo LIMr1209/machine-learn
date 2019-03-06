@@ -40,9 +40,9 @@ class NearestMeanEvaluator():
     def __init__(self, cuda):
         self.cuda = cuda
         self.means = None
-        self.totalFeatures = np.zeros((100, 1))  # 100 是类数目?  9?1000?
+        self.totalFeatures = np.zeros((200, 1))  # 类数目
 
-    def evaluate(self, model, loader, step_size=10, kMean=False):
+    def evaluate(self, model, loader, step_size=3, kMean=False):
         '''
         :param model: Train model
         :param loader: Data loader
@@ -52,7 +52,7 @@ class NearestMeanEvaluator():
         '''
         model.eval()
         if self.means is None:
-            self.means = np.zeros((100, model.featureSize))  # 100 是类数目?  9?1000?
+            self.means = np.zeros((200, model.featureSize))  # 200 是类数目?
         correct = 0
 
         for data, y, target in loader:
@@ -65,9 +65,9 @@ class NearestMeanEvaluator():
             result = torch.norm(result, 2, 2)
             if kMean:
                 result = result.cpu().numpy()
-                tempClassifier = np.zeros((len(result), int(100 / step_size)))  # 100 是类数目?  9?1000?
+                tempClassifier = np.zeros((len(result), int(200 / step_size)))  # 是类数目/stepsize
                 for outer in range(0, len(result)):
-                    for tempCounter in range(0, int(100 / step_size)):   # 100 是类数目?  9?1000?
+                    for tempCounter in range(0, int(200 / step_size)):   # 是类数目/stepsize?
                         tempClassifier[outer, tempCounter] = np.sum(
                             result[tempCounter * step_size:(tempCounter * step_size) + step_size])
                 for outer in range(0, len(result)):
@@ -116,7 +116,7 @@ class NearestMeanEvaluator():
         img = cMatrix.value()
         return img
 
-    def update_means(self, model, train_loader, classes=100):
+    def update_means(self, model, train_loader, classes=200):
         '''
         This method updates the mean embedding using the train data; DO NOT pass test data iterator to this. 
         :param model: Trained model
@@ -168,9 +168,9 @@ class softmax_evaluator():
     def __init__(self, cuda):
         self.cuda = cuda
         self.means = None
-        self.totalFeatures = np.zeros((100, 1))    # 100 是类数目?  9?1000?
+        self.totalFeatures = np.zeros((200, 1))    # 是类数目
 
-    def evaluate(self, model, loader, scale=None, thres=False, older_classes=None, step_size=10, descriptor=False,
+    def evaluate(self, model, loader, scale=None, thres=False, older_classes=None, step_size=3, descriptor=False,
                  falseDec=False):
         '''
         :param model: Trained model
@@ -250,7 +250,7 @@ class softmax_evaluator():
 
         return 100. * correct / len(loader.dataset)
 
-    def get_confusion_matrix(self, model, loader, size, scale=None, older_classes=None, step_size=10, descriptor=False):
+    def get_confusion_matrix(self, model, loader, size, scale=None, older_classes=None, step_size=3, descriptor=False):
         '''
         :return: Returns the confusion matrix on the data given by loader
         '''

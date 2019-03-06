@@ -148,7 +148,7 @@ class TestData:
 
 
 def get_dataset(path):
-    num_class = 9
+    num_class = 200
     num_sample_train = 200
     num_sample_test = 100
     W = 224
