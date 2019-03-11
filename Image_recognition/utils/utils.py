@@ -43,7 +43,6 @@ def accuracy(output, target, topk=(1,)):
 
 # 保存模型参数以及优化器参数
 def save_checkpoint(state):
-    prefix = './checkpoint/' + opt.model + '_'
-    filename = time.strftime(prefix + '%m%d_%H-%M-%S.pth.tar')
+    filename = './checkpoint/' + opt.model +'.pth.tar'
     torch.save(state, filename)
     # print("Get Better top1 : %s saving weights to %s" % (state["best_precision"], filename))  # 打印精确度
