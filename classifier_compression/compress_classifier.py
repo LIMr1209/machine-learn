@@ -232,6 +232,8 @@ def main():
 
     # We can optionally resume from a checkpoint
     if args.resume:  # 加载训练模型
+        # state_dict = torch.load(args.resume)
+        # model.load_state_dict(state_dict)
         model, compression_scheduler, start_epoch = apputils.load_checkpoint(model, chkpt_file=args.resume)
         model.to(args.device)
 
@@ -270,7 +272,7 @@ def main():
     # substring "_cifar", then cifar10 is used.
     # 加载数据集：从传递的模型名称推断要加载的数据集
 
-    train_loader, val_loader, test_loader, _ = get_data_loaders(datasets_fn, r'/home/tian/Desktop/image_test',
+    train_loader, val_loader, test_loader, _ = get_data_loaders(datasets_fn, r'/home/tian/Desktop/image',
                                                                 args.batch_size,
                                                                 args.workers, args.validation_split, args.deterministic,
                                                                 args.effective_train_size, args.effective_valid_size,

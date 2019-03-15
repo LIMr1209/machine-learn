@@ -1,9 +1,8 @@
 import torch.nn as nn
 from torchvision.models import ResNet
 import torch
-
+import re
 pretrained = True
-
 
 class Bottleneck(nn.Module):
     expansion = 4
@@ -65,15 +64,19 @@ def resnet152(pretrained=False, **kwargs):
 class ResNet152(nn.Module):
     def __init__(self):
         super(ResNet152, self).__init__()
-        self.model = resnet152(pretrained=pretrained, num_classes=6)
+        self.model_name = 'ResNet152'
+        self.model = resnet152(pretrained=pretrained, num_classes=144)
 
     def forward(self, x):
         return self.model(x)
 
 
 if __name__ == '__main__':
-    a = ResNet152().to(torch.device('cuda'))
+    model = ResNet152().to(torch.device('cuda'))
     input = torch.autograd.Variable(torch.randn(16, 3, 224, 224)).to(torch.device('cuda'))
-    output = a(input)
-    print(output.size())
-    torch.save(a.state_dict(), 'haha.pth')
+    params = model.state_dict()
+    rex = re.compile(r'.*(conv|downsample\.|fc)\d?\.weight')
+    for i in params.keys():
+        if rex.search(i):
+            print(i)
+

@@ -24,8 +24,8 @@ def test(**kwargs):
         model.to(opt.device)
         model.eval()  # 把module设成测试模式，对Dropout和BatchNorm有影响
         # data
-        test_data = DatasetFromFilename(opt.data_root, test=True)  # 测试集
-        # test_data = DatasetFromFilename(opt.data_root, train=True)
+        # test_data = DatasetFromFilename(opt.data_root, test=True)  # 测试集
+        test_data = DatasetFromFilename(opt.data_root, train=True)
         test_dataloader = DataLoader(test_data, batch_size=opt.batch_size, shuffle=False, num_workers=opt.num_workers)
         correct = 0
         total = 0
@@ -61,6 +61,7 @@ def recognition(**kwargs):
         result = {}
         for i in range(opt.num_classes):  # 计算各分类比重
             result[opt.cate_classes[i]] = t.nn.functional.softmax(outputs, dim=1)[:, i].detach().tolist()[0]
+            result = sorted(result.items(), key=lambda x: x[1], reverse=True)
         print(result)
 
 

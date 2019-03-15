@@ -1,5 +1,3 @@
-import time
-
 import torch
 from config import opt
 

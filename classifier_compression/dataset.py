@@ -1,7 +1,7 @@
 from PIL import Image
 from torch.utils import data
 from torchvision import transforms as T
-from imagefolder_splitter import ImageFolderSplitter
+from utils.imagefolder_splitter import ImageFolderSplitter
 
 
 class DatasetFromFilename(data.Dataset):

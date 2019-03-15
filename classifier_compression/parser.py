@@ -34,7 +34,7 @@ def get_parser():
                              ' (default: resnet152)')
     parser.add_argument('-j', '--workers', default=44, type=int, metavar='N',
                         help='number of data loading workers (default: 44)')
-    parser.add_argument('--epochs', default=50, type=int, metavar='N',
+    parser.add_argument('--epochs', default=20, type=int, metavar='N',
                         help='number of total epochs to run')
     parser.add_argument('-b', '--batch-size', default=16, type=int,
                         metavar='N', help='mini-batch size (default: 16)')
@@ -44,7 +44,7 @@ def get_parser():
                         help='momentum')
     parser.add_argument('--weight-decay', '--wd', default=1e-4, type=float,
                         metavar='W', help='weight decay (default: 1e-4)')
-    parser.add_argument('--print-freq', '-p', default=50, type=int,
+    parser.add_argument('--print-freq', '-p', default=500, type=int,
                         metavar='N', help='print frequency (default: 50)')
     parser.add_argument('--resume', default='', type=str, metavar='PATH',
                         help='path to latest checkpoint (default: none)')
@@ -67,7 +67,7 @@ def get_parser():
     parser.add_argument('--sense', dest='sensitivity', choices=['element', 'filter', 'channel'],
                         type=lambda s: s.lower(),
                         help='test the thinnify of layers to pruning')  # 测试修剪层的敏感性
-    parser.add_argument('--sense-range', dest='sensitivity_range', type=float, nargs=3, default=[0.0, 0.95, 0.05],
+    parser.add_argument('--sense-range', dest='sensitivity_range', type=float, nargs=3, default=[0.4, 0.9, 0.1],
                         help='an optional parameter for sensitivity testing providing the range of sparsities to test.\n'
                              'This is equivalent to creating sensitivities = np.arange(start, stop, step)')  # 灵敏度测试的可选参数，提供要测试的稀疏度范围。这相当于创建灵敏度=np.arange（开始、停止、步骤）
     parser.add_argument('--extras', default=None, type=str,

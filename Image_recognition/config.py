@@ -11,8 +11,8 @@ class DefaultConfig(object):
     model = 'ResNet152'  # 使用的模型，名字必须与models/__init__.py中的名字一致
 
     data_root = "/home/tian/Desktop/image"  # 数据集存放路径
-    # load_model_path = None  # 加载训练的模型的路径，为None代表不加载
-    load_model_path = './checkpoint/ResNet152_0308_20-10-34.pth.tar'
+    load_model_path = None  # 加载训练的模型的路径，为None代表不加载
+    load_model_path = './checkpoint/ResNet152.pth.tar'
     batch_size = 16  # 每批训练数据的个数,显存不足,适当减少
     use_gpu = True  # user GPU or not
     num_workers = 4  # how many workers for loading data
@@ -24,7 +24,7 @@ class DefaultConfig(object):
     # pretrained = False  # 不加载预训练
     pretrained = True  # 加载预训练模型
 
-    max_epoch = 15  # 学习次数
+    max_epoch = 20  # 学习次数
     lr = 0.001  # initial learning rate
     lr_decay = 0.5  # when val_loss increase, lr = lr*lr_decay
     weight_decay = 0e-5  # 损失函数

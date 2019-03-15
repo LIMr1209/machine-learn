@@ -34,5 +34,12 @@ def RGBResize(width=224, height=224):
                 print(e)
 
 
+# 文件重命名
+def rename(dirs='/home/tian/Desktop/image/鼠标垫'):
+    for i in os.listdir(dirs):
+        os.rename(os.path.join(dirs, i), os.path.join(dirs, '1'+str(i)))
+
+
 if __name__ == '__main__':
     remove()
+    # rename()
