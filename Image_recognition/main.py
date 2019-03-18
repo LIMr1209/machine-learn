@@ -97,7 +97,7 @@ def train(**kwargs):
         start_epoch = checkpoint["epoch"]
         best_precision = checkpoint["best_precision"]
         model.load_state_dict(checkpoint["state_dict"])
-        # optimizer.load_state_dict(checkpoint["optimizer"])
+        optimizer = checkpoint['optimizer']
     model.to(opt.device)
 
     # train
@@ -149,7 +149,7 @@ def train(**kwargs):
                 "model_name": opt.model,
                 "state_dict": model.state_dict(),
                 "best_precision": best_precision,
-                # "optimizer": optimizer.state_dict(),
+                "optimizer": optimizer,
                 "valid_loss": valid_loss,
             })  # 保存模型
         # update learning rate

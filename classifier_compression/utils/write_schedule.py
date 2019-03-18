@@ -1,4 +1,3 @@
-import csv
 from ruamel import yaml
 
 with open('../resnet152.schedule_sensitivity.yaml', 'r', encoding='utf-8') as f:
@@ -33,11 +32,7 @@ with open('dict.txt', 'r') as f:
             break
         sensitivities_dict[content.strip()] = 0.4
 
-
-
 data['pruners']['pruner1']['sensitivities'] = sensitivities_dict
 # 保存写入文件
 with open('../resnet152.schedule_sensitivity.yaml', "w", encoding="utf-8") as f:
     yaml.dump(data, f, Dumper=yaml.RoundTripDumper)
-
-

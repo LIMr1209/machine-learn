@@ -232,17 +232,18 @@ def main():
 
     # We can optionally resume from a checkpoint
     if args.resume:  # 加载训练模型
-        # state_dict = torch.load(args.resume)
-        # model.load_state_dict(state_dict)
-        model, compression_scheduler, start_epoch = apputils.load_checkpoint(model, chkpt_file=args.resume)
+        state_dict = torch.load(args.resume)
+        model.load_state_dict(state_dict)
+        # model, compression_scheduler, start_epoch = apputils.load_checkpoint(model, chkpt_file=args.resume)
         model.to(args.device)
 
     # Define loss function (criterion) and optimizer  # 定义损失函数和优化器SGD
     criterion = nn.CrossEntropyLoss().to(args.device)
 
-    optimizer = torch.optim.SGD(model.parameters(), lr=args.lr,
-                                momentum=args.momentum,
-                                weight_decay=args.weight_decay)
+    # optimizer = torch.optim.SGD(model.fc.parameters(), lr=args.lr,
+    #                             momentum=args.momentum,
+    #                             weight_decay=args.weight_decay)
+    optimizer = torch.optim.Adam(model.model.fc.parameters(), lr=args.lr, weight_decay=args.weight_decay)
     msglogger.info('Optimizer Type: %s', type(optimizer))
     msglogger.info('Optimizer Args: %s', optimizer.defaults)
 
@@ -326,8 +327,9 @@ def main():
         msglogger.info('\tLoss Weights (distillation | student | teacher): %s',
                        ' | '.join(['{:.2f}'.format(val) for val in dlw]))
         msglogger.info('\tStarting from Epoch: %s', args.kd_start_epoch)
-
-    for epoch in range(start_epoch, start_epoch + args.epochs):
+    lr = args.lr
+    lr_decay = 0.5
+    for epoch in range(start_epoch, args.epochs):
         # This is the main training loop.
         msglogger.info('\n')
         if compression_scheduler:
@@ -376,6 +378,11 @@ def main():
         is_best = epoch == perf_scores_history[0].epoch
         apputils.save_checkpoint(epoch, args.arch, model, optimizer, compression_scheduler,
                                  perf_scores_history[0].top1, is_best, args.name, msglogger.logdir)
+        if not is_best:
+            lr = lr * lr_decay
+            # 当loss大于上一次loss,降低学习率
+            for param_group in optimizer.param_groups:
+                param_group['lr'] = lr
 
     # Finally run results on the test set # 最后在测试集上运行结果
     test(test_loader, model, criterion, [pylogger], activations_collectors, args=args)
@@ -688,7 +695,6 @@ def evaluate_model(model, criterion, test_loader, loggers, activations_collector
         quantizer = quantization.PostTrainLinearQuantizer.from_args(model, args)
         quantizer.prepare_model()
         model.to(args.device)
-
     top1, _, _ = test(test_loader, model, criterion, loggers, activations_collectors, args=args)
 
     if args.quantize_eval:

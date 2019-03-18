@@ -11,7 +11,7 @@ __pycache__/
 *.png
 *.log
 latest_log_file
-latest_log_dir/
+latest_log_dir
 *.yaml
 logs/
 nohup.out
