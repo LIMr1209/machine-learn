@@ -232,9 +232,9 @@ def main():
 
     # We can optionally resume from a checkpoint
     if args.resume:  # 加载训练模型
-        state_dict = torch.load(args.resume)
-        model.load_state_dict(state_dict)
-        # model, compression_scheduler, start_epoch = apputils.load_checkpoint(model, chkpt_file=args.resume)
+        # state_dict = torch.load(args.resume)
+        # model.load_state_dict(state_dict)
+        model, compression_scheduler, start_epoch = apputils.load_checkpoint(model, chkpt_file=args.resume)
         model.to(args.device)
 
     # Define loss function (criterion) and optimizer  # 定义损失函数和优化器SGD

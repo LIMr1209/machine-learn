@@ -1,6 +1,6 @@
 import warnings
 import torch as t
-
+from distiller.quantization.range_linear import LinearQuantMode
 from utils.get_classes import get_classes
 
 
@@ -12,7 +12,7 @@ class DefaultConfig(object):
 
     data_root = "/home/tian/Desktop/image"  # 数据集存放路径
     load_model_path = None  # 加载训练的模型的路径，为None代表不加载
-    load_model_path = './checkpoint/ResNet152.pth.tar'
+    load_model_path = '/opt/checkpoint/ResNet152.pt'
     batch_size = 16  # 每批训练数据的个数,显存不足,适当减少
     use_gpu = True  # user GPU or not
     num_workers = 4  # how many workers for loading data
@@ -23,6 +23,21 @@ class DefaultConfig(object):
     num_classes = len(cate_classes)  # 分类个数
     # pretrained = False  # 不加载预训练
     pretrained = True  # 加载预训练模型
+    # 压缩计划表
+    compress = 'resnet152.schedule_sensitivity.yaml'
+    compress = None
+    # 量化
+    quantize_eval = True
+    qe_calibration = None
+    qe_mode = LinearQuantMode.SYMMETRIC
+    qe_bits_acts = 8
+    qe_bits_wts = 8
+    qe_bits_accum = 32
+    qe_clip_acts = False
+    qe_no_clip_layers = []
+    qe_per_channel = False
+    qe_stats_file = None
+    qe_config_file = None
 
     max_epoch = 20  # 学习次数
     lr = 0.001  # initial learning rate

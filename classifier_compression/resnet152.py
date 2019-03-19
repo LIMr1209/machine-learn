@@ -65,7 +65,7 @@ class ResNet152(nn.Module):
     def __init__(self):
         super(ResNet152, self).__init__()
         self.model_name = 'ResNet152'
-        self.model = resnet152(pretrained=pretrained, num_classes=144)
+        self.model = resnet152(pretrained=pretrained, num_classes=150)
 
     def forward(self, x):
         return self.model(x)

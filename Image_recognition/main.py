@@ -1,3 +1,5 @@
+import math
+import distiller
 from config import opt
 import torch as t
 import models
@@ -5,9 +7,12 @@ from data.dataset import DatasetFromFilename
 from torch.utils.data import DataLoader
 from utils.image_loader import image_loader
 from utils.utils import AverageMeter, accuracy
+from utils.sensitivity import sensitivity_analysis
 from utils.visualize import Visualizer
 from utils.progress_bar import ProgressBar
 from tqdm import tqdm
+import numpy as np
+import distiller.quantization as quantization
 
 seed = 1000
 t.cuda.manual_seed(seed)  # 随机数种子,当使用随机数时,关闭进程后再次生成和上次得一样
@@ -24,12 +29,19 @@ def test(**kwargs):
         model.to(opt.device)
         model.eval()  # 把module设成测试模式，对Dropout和BatchNorm有影响
         # data
-        # test_data = DatasetFromFilename(opt.data_root, test=True)  # 测试集
-        test_data = DatasetFromFilename(opt.data_root, train=True)
+        test_data = DatasetFromFilename(opt.data_root, test=True)  # 测试集
+        # test_data = DatasetFromFilename(opt.data_root, train=True)
         test_dataloader = DataLoader(test_data, batch_size=opt.batch_size, shuffle=False, num_workers=opt.num_workers)
         correct = 0
         total = 0
         print('测试数据集大小', len(test_dataloader))
+        # 量化
+        if opt.quantize_eval:
+            model.cpu()
+            quantizer = quantization.PostTrainLinearQuantizer.from_args(model, opt)
+            quantizer.prepare_model()
+            model.to(opt.device)
+        model.eval()  # 把module设成测试模式，对Dropout和BatchNorm有影响
         for ii, (data, labels) in tqdm(enumerate(test_dataloader)):
             input = data.to(opt.device)
             labels = labels.to(opt.device)
@@ -99,22 +111,30 @@ def train(**kwargs):
         model.load_state_dict(checkpoint["state_dict"])
         optimizer = checkpoint['optimizer']
     model.to(opt.device)
-
+    # step4: data_image
+    train_data = DatasetFromFilename(opt.data_root, train=True)  # 训练集
+    val_data = DatasetFromFilename(opt.data_root, train=False)  # 验证集
+    train_dataloader = DataLoader(train_data, opt.batch_size, shuffle=True, num_workers=opt.num_workers)
+    val_dataloader = DataLoader(val_data, opt.batch_size, shuffle=False, num_workers=opt.num_workers)
+    compression_scheduler = None
+    if opt.compress:
+        compression_scheduler = distiller.file_config(model, optimizer, opt.compress, compression_scheduler)
     # train
     for epoch in range(start_epoch, opt.max_epoch):
-        # step4: data train 每次训练重新获取数据(打乱)
-        train_data = DatasetFromFilename(opt.data_root, train=True)  # 训练集
-        val_data = DatasetFromFilename(opt.data_root, train=False)  # 验证集
-        train_dataloader = DataLoader(train_data, opt.batch_size, shuffle=True, num_workers=opt.num_workers)
-        val_dataloader = DataLoader(val_data, opt.batch_size, shuffle=False, num_workers=opt.num_workers)
         model.train()
+        if compression_scheduler:
+            compression_scheduler.on_epoch_begin(epoch)
         train_losses.reset()  # 重置仪表
         train_top1.reset()  # 重置仪表
         # print('训练数据集大小', len(train_dataloader))
+        total_samples = len(train_dataloader.sampler)
+        steps_per_epoch = math.ceil(total_samples / opt.batch_size)
         train_progressor = ProgressBar(mode="Train  ", epoch=epoch, total_epoch=opt.max_epoch,
                                        model_name=opt.model,
                                        total=len(train_dataloader))
         for ii, (data, labels) in enumerate(train_dataloader):
+            if compression_scheduler:
+                compression_scheduler.on_minibatch_begin(epoch, ii, steps_per_epoch, optimizer)
             train_progressor.current = ii + 1
             # train model
             input = data.to(opt.device)
@@ -122,10 +142,19 @@ def train(**kwargs):
 
             score = model(input)
             loss = criterion(score, target)  # 计算损失
+            if compression_scheduler:
+                # Before running the backward phase, we allow the scheduler to modify the loss
+                # (e.g. add regularization loss)
+                agg_loss = compression_scheduler.before_backward_pass(epoch, ii, steps_per_epoch, loss,
+                                                                      optimizer=optimizer, return_loss_components=True)
+                loss = agg_loss.overall_loss
+            train_losses.update(loss.item(), input.size(0))
             # loss = criterion(score[0], target)  # 计算损失   Inception3网络
             optimizer.zero_grad()  # 参数梯度设成0
             loss.backward()  # 反向传播
             optimizer.step()  # 更新参数
+            if compression_scheduler:
+                compression_scheduler.on_minibatch_end(epoch, ii, steps_per_epoch, optimizer)
             # meters update and visualize
             precision1_train, precision2_train = accuracy(score, target, topk=(1, 2))  # top1 和 top2 的准确率
             # precision1_train, precision2_train = accuracy(score[0], target, topk=(1, 2))  # Inception3网络
@@ -141,6 +170,8 @@ def train(**kwargs):
         # validate and visualize
         print('')
         valid_loss = val(model, epoch, criterion, val_dataloader)  # 校验模型
+        if compression_scheduler:
+            compression_scheduler.on_epoch_end(epoch, optimizer)
         is_best = valid_loss[1] > best_precision  # 精确度比较，如果此次比上次大　　保存模型
         best_precision = max(valid_loss[1], best_precision)
         if is_best:
@@ -161,6 +192,20 @@ def train(**kwargs):
                 param_group['lr'] = lr
 
         previous_loss = train_losses.val
+
+
+# 模型敏感性分析
+def sensitivity():
+    test_data = DatasetFromFilename(opt.data_root, test=True)
+    test_dataloader = DataLoader(test_data, batch_size=opt.batch_size, shuffle=False, num_workers=opt.num_workers)
+    criterion = t.nn.CrossEntropyLoss().to(opt.device)  # 损失函数
+    model = getattr(models, opt.model)()
+    if opt.load_model_path:
+        checkpoint = t.load(opt.load_model_path)
+        model.load_state_dict(checkpoint["state_dict"])
+    model.to(opt.device)
+    sensitivities = np.arange(opt.sensitivity_range[0], opt.sensitivity_range[1], opt.sensitivity_range[2])
+    return sensitivity_analysis(model, criterion, test_dataloader, opt, sensitivities)
 
 
 def val(model, epoch, criterion, dataloader):
