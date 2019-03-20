@@ -1,5 +1,9 @@
 import math
+import os
+import operator
 import distiller
+from distiller import apputils
+from distiller.data_loggers import *
 from config import opt
 import torch as t
 import models
@@ -7,7 +11,7 @@ from data.dataset import DatasetFromFilename
 from torch.utils.data import DataLoader
 from utils.image_loader import image_loader
 from utils.utils import AverageMeter, accuracy
-from utils.sensitivity import sensitivity_analysis
+from utils.sensitivity import sensitivity_analysis, val
 from utils.visualize import Visualizer
 from utils.progress_bar import ProgressBar
 from tqdm import tqdm
@@ -38,7 +42,7 @@ def test(**kwargs):
         # 量化
         if opt.quantize_eval:
             model.cpu()
-            quantizer = quantization.PostTrainLinearQuantizer.from_args(model, opt)
+            quantizer = quantization.PostTrainLinearQuantizer.from_args(model, opt)  # 量化模型
             quantizer.prepare_model()
             model.to(opt.device)
         model.eval()  # 把module设成测试模式，对Dropout和BatchNorm有影响
@@ -56,6 +60,13 @@ def test(**kwargs):
             correct += (results == labels).sum().item()
 
         print('Test Accuracy of the model on the {} test images: {} %'.format(total, 100 * correct / total))
+        # 保存量化模型
+        if opt.quantize_eval:
+            model.save({
+                # "model_name": opt.model,
+                "state_dict": model.state_dict(),
+                'quantizer_metadata': model.quantizer_metadata
+            }, './checkpoint/ResNet152_quantize.pth')
 
 
 def recognition(**kwargs):
@@ -85,6 +96,7 @@ def train(**kwargs):
     best_precision = 0  # 最好的精确度
     start_epoch = 0
     lr = opt.lr
+    perf_scores_history = []
     # step1: criterion and optimizer
     # 1. 铰链损失（Hinge Loss）：主要用于支持向量机（SVM） 中；
     # 2. 互熵损失 （Cross Entropy Loss，Softmax Loss ）：用于Logistic 回归与Softmax 分类中；
@@ -93,10 +105,13 @@ def train(**kwargs):
     # 5. 其他损失（如0-1损失，绝对值损失）
     criterion = t.nn.CrossEntropyLoss().to(opt.device)  # 损失函数
     # step2: meters
-    train_losses = AverageMeter()
-    train_top1 = AverageMeter()
+    train_losses = AverageMeter()  # 误差仪表
+    train_top1 = AverageMeter()  # top1 仪表
+    train_top5 = AverageMeter()  # top5 仪表
+    pylogger = PythonLogger(msglogger)
     # step3: configure model
-    model = getattr(models, opt.model)()
+    model = getattr(models, opt.model)()  # 获得网络结构
+    compression_scheduler = distiller.CompressionScheduler(model)
     optimizer = model.get_optimizer(opt.lr, opt.weight_decay)  # 优化器
     if opt.load_model_path:
         # # 把所有的张量加载到CPU中
@@ -107,23 +122,25 @@ def train(**kwargs):
         # t.load(opt.load_model_path, map_location={'cuda:1': 'cuda:0'})
         checkpoint = t.load(opt.load_model_path)
         start_epoch = checkpoint["epoch"]
+        # compression_scheduler.load_state_dict(checkpoint['compression_scheduler'], False)
         best_precision = checkpoint["best_precision"]
         model.load_state_dict(checkpoint["state_dict"])
         optimizer = checkpoint['optimizer']
-    model.to(opt.device)
+    model.to(opt.device)  # 加载模型到 GPU
     # step4: data_image
     train_data = DatasetFromFilename(opt.data_root, train=True)  # 训练集
     val_data = DatasetFromFilename(opt.data_root, train=False)  # 验证集
-    train_dataloader = DataLoader(train_data, opt.batch_size, shuffle=True, num_workers=opt.num_workers)
-    val_dataloader = DataLoader(val_data, opt.batch_size, shuffle=False, num_workers=opt.num_workers)
-    compression_scheduler = None
+    train_dataloader = DataLoader(train_data, opt.batch_size, shuffle=True, num_workers=opt.num_workers)  # 训练集加载器
+    val_dataloader = DataLoader(val_data, opt.batch_size, shuffle=False, num_workers=opt.num_workers)  # 验证集加载器
     if opt.compress:
-        compression_scheduler = distiller.file_config(model, optimizer, opt.compress, compression_scheduler)
+        compression_scheduler = distiller.file_config(model, optimizer, opt.compress,
+                                                      compression_scheduler)  # 加载模型修剪计划表
+        model.to(opt.device)
     # train
     for epoch in range(start_epoch, opt.max_epoch):
         model.train()
-        if compression_scheduler:
-            compression_scheduler.on_epoch_begin(epoch)
+        if opt.pruning:
+            compression_scheduler.on_epoch_begin(epoch)  # epoch 开始修剪
         train_losses.reset()  # 重置仪表
         train_top1.reset()  # 重置仪表
         # print('训练数据集大小', len(train_dataloader))
@@ -133,47 +150,63 @@ def train(**kwargs):
                                        model_name=opt.model,
                                        total=len(train_dataloader))
         for ii, (data, labels) in enumerate(train_dataloader):
-            if compression_scheduler:
-                compression_scheduler.on_minibatch_begin(epoch, ii, steps_per_epoch, optimizer)
-            train_progressor.current = ii + 1
+            if opt.pruning:
+                compression_scheduler.on_minibatch_begin(epoch, ii, steps_per_epoch, optimizer)  # batch 开始修剪
+            train_progressor.current = ii + 1  # 训练集当前进度
             # train model
             input = data.to(opt.device)
             target = labels.to(opt.device)
 
-            score = model(input)
+            score = model(input)  # 网络结构返回值
             loss = criterion(score, target)  # 计算损失
-            if compression_scheduler:
+            if opt.pruning:
                 # Before running the backward phase, we allow the scheduler to modify the loss
                 # (e.g. add regularization loss)
                 agg_loss = compression_scheduler.before_backward_pass(epoch, ii, steps_per_epoch, loss,
-                                                                      optimizer=optimizer, return_loss_components=True)
+                                                                      optimizer=optimizer,
+                                                                      return_loss_components=True)  # 模型修建误差
                 loss = agg_loss.overall_loss
             train_losses.update(loss.item(), input.size(0))
             # loss = criterion(score[0], target)  # 计算损失   Inception3网络
             optimizer.zero_grad()  # 参数梯度设成0
             loss.backward()  # 反向传播
             optimizer.step()  # 更新参数
-            if compression_scheduler:
-                compression_scheduler.on_minibatch_end(epoch, ii, steps_per_epoch, optimizer)
-            # meters update and visualize
-            precision1_train, precision2_train = accuracy(score, target, topk=(1, 2))  # top1 和 top2 的准确率
+
+            if opt.pruning:
+                compression_scheduler.on_minibatch_end(epoch, ii, steps_per_epoch, optimizer)  # batch 结束修剪
+
+            precision1_train, precision5_train = accuracy(score, target, topk=(1, 5))  # top1 和 top5 的准确率
+
             # precision1_train, precision2_train = accuracy(score[0], target, topk=(1, 2))  # Inception3网络
             train_losses.update(loss.item(), input.size(0))
             train_top1.update(precision1_train[0].item(), input.size(0))
+            train_top5.update(precision5_train[0].item(), input.size(0))
             train_progressor.current_loss = train_losses.avg
             train_progressor.current_top1 = train_top1.avg
+            train_progressor.current_top5 = train_top5.avg
             if (ii + 1) % opt.print_freq == 0:
                 if opt.vis:
                     vis.plot('loss', train_losses.val)  # 绘图
-            train_progressor()
+            train_progressor()  # 打印进度
         # train_progressor.done()  # 保存训练结果为txt
         # validate and visualize
         print('')
-        valid_loss = val(model, epoch, criterion, val_dataloader)  # 校验模型
-        if compression_scheduler:
-            compression_scheduler.on_epoch_end(epoch, optimizer)
-        is_best = valid_loss[1] > best_precision  # 精确度比较，如果此次比上次大　　保存模型
-        best_precision = max(valid_loss[1], best_precision)
+        if opt.pruning:
+            distiller.log_weights_sparsity(model, epoch, loggers=[pylogger])  # 打印模型修剪结果
+            compression_scheduler.on_epoch_end(epoch, optimizer)  # epoch 结束修剪
+        val_loss, val_top1, val_top5 = val(model, criterion, val_dataloader, epoch)  # 校验模型
+        sparsity = distiller.model_sparsity(model)
+        perf_scores_history.append(distiller.MutableNamedTuple({'sparsity': sparsity, 'top1': val_top1,
+                                                                'top5': val_top5, 'epoch': epoch}))
+        # 保持绩效分数历史记录从最好到最差的排序
+        # 按稀疏度排序为主排序键，然后按top1、top5、epoch排序
+        perf_scores_history.sort(key=operator.attrgetter('sparsity', 'top1', 'top5', 'epoch'), reverse=True)
+        for score in perf_scores_history[:1]:
+            msglogger.info('==> Best [Top1: %.3f   Top5: %.3f   Sparsity: %.2f on epoch: %d]',
+                           score.top1, score.top5, score.sparsity, score.epoch)
+
+        is_best = epoch == perf_scores_history[0].epoch  # 当前epoch 和最佳epoch 一样
+        best_precision = max(perf_scores_history[0].top1, best_precision)  # 最大top1 准确率
         if is_best:
             model.save({
                 "epoch": epoch + 1,
@@ -181,7 +214,8 @@ def train(**kwargs):
                 "state_dict": model.state_dict(),
                 "best_precision": best_precision,
                 "optimizer": optimizer,
-                "valid_loss": valid_loss,
+                "valid_loss": [val_loss, val_top1, val_top5],
+                'compression_scheduler': compression_scheduler.state_dict()
             })  # 保存模型
         # update learning rate
         # 如果训练误差比上次大　降低学习效率
@@ -195,7 +229,8 @@ def train(**kwargs):
 
 
 # 模型敏感性分析
-def sensitivity():
+def sensitivity(**kwargs):
+    opt._parse(kwargs)
     test_data = DatasetFromFilename(opt.data_root, test=True)
     test_dataloader = DataLoader(test_data, batch_size=opt.batch_size, shuffle=False, num_workers=opt.num_workers)
     criterion = t.nn.CrossEntropyLoss().to(opt.device)  # 损失函数
@@ -205,37 +240,7 @@ def sensitivity():
         model.load_state_dict(checkpoint["state_dict"])
     model.to(opt.device)
     sensitivities = np.arange(opt.sensitivity_range[0], opt.sensitivity_range[1], opt.sensitivity_range[2])
-    return sensitivity_analysis(model, criterion, test_dataloader, opt, sensitivities)
-
-
-def val(model, epoch, criterion, dataloader):
-    with t.no_grad():
-        """
-        计算模型在验证集上的准确率等信息
-        """
-        model.eval()
-        losses = AverageMeter()
-        top1 = AverageMeter()
-        # print('验证数据集大小', len(dataloader))
-        val_progressor = ProgressBar(mode="Val  ", epoch=epoch, total_epoch=opt.max_epoch, model_name=opt.model,
-                                     total=len(dataloader))
-        for ii, (data, labels) in enumerate(dataloader):
-            val_progressor.current = ii + 1
-            input = data.to(opt.device)
-            labels = labels.to(opt.device)
-            score = model(input)
-            loss = criterion(score, labels)
-
-            # 2.2.2 measure accuracy and record loss
-            precision1, precision2 = accuracy(score, labels, topk=(1, 2))  # top1 和 top2 的准确率
-            losses.update(loss.item(), input.size(0))
-            top1.update(precision1[0].item(), input.size(0))
-            val_progressor.current_loss = losses.avg
-            val_progressor.current_top1 = top1.avg
-            val_progressor()
-        print('')
-        # val_progressor.done() # 保存校验结果为txt
-        return [losses.avg, top1.avg]
+    return sensitivity_analysis(model, criterion, test_dataloader, opt, sensitivities, msglogger)
 
 
 def help():
@@ -245,11 +250,12 @@ def help():
 
     print("""
     usage : python file.py <function> [--args=value]
-    <function> := train | test | help
+    <function> := train | test | sensitivity | recognition | help
     example: 
             python {0} train --env='env0701' --lr=0.01
             python {0} test --dataset='path/to/dataset/root/'
             python {0} recognition --url='path/to/dataset/root/' --load_path='prestrain/AlexNet_0121_11-24-50'
+            python {0} sensitivity 
             python {0} help
     avaiable args:""".format(__file__))
 
@@ -261,4 +267,7 @@ def help():
 if __name__ == '__main__':
     import fire
 
+    script_dir = os.path.dirname(__file__)
+    module_path = os.path.abspath(os.path.join(script_dir, '..', '..'))
+    msglogger = apputils.config_pylogger(os.path.join(script_dir, 'logging.conf'), opt.name, opt.output_dir)
     fire.Fire()

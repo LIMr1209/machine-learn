@@ -1,6 +1,7 @@
 # coding:utf8
 import torch as t
 from utils.utils import save_checkpoint
+from config import opt
 
 
 class BasicModule(t.nn.Module):
@@ -21,11 +22,11 @@ class BasicModule(t.nn.Module):
         checkpoint = t.load(path)
         return checkpoint
 
-    def save(self, state):
+    def save(self, state, filename='./checkpoint/' + opt.model + '.pth.tar'):
         """
         保存模型，默认使用“模型名字+时间”作为文件名
         """
-        save_checkpoint(state)
+        save_checkpoint(state,filename)
 
     def get_optimizer(self, lr, weight_decay):  # 权重衰减  防止过拟合
         # return t.optim.SGD(self.parameters(), lr=lr, momentum=0.9) # 随机梯度下降法

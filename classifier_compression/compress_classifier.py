@@ -232,8 +232,8 @@ def main():
 
     # We can optionally resume from a checkpoint
     if args.resume:  # 加载训练模型
-        # state_dict = torch.load(args.resume)
-        # model.load_state_dict(state_dict)
+        # checkpoint = torch.load(args.resume)
+        # model.load_state_dict(checkpoint['state_dict'])
         model, compression_scheduler, start_epoch = apputils.load_checkpoint(model, chkpt_file=args.resume)
         model.to(args.device)
 
@@ -273,7 +273,7 @@ def main():
     # substring "_cifar", then cifar10 is used.
     # 加载数据集：从传递的模型名称推断要加载的数据集
 
-    train_loader, val_loader, test_loader, _ = get_data_loaders(datasets_fn, r'/home/tian/Desktop/image',
+    train_loader, val_loader, test_loader, _ = get_data_loaders(datasets_fn, r'/home/tian/Desktop/image_yasuo',
                                                                 args.batch_size,
                                                                 args.workers, args.validation_split, args.deterministic,
                                                                 args.effective_train_size, args.effective_valid_size,
@@ -734,7 +734,7 @@ def sensitivity_analysis(model, criterion, data_loader, loggers, args, sparsitie
 
 
 def automated_deep_compression(model, criterion, optimizer, loggers, args):  # 自动化的深层压缩
-    train_loader, val_loader, test_loader, _ = get_data_loaders(datasets_fn, r'/home/tian/Desktop/image_test',
+    train_loader, val_loader, test_loader, _ = get_data_loaders(datasets_fn, r'/home/tian/Desktop/image_yasuo',
                                                                 args.batch_size,
                                                                 args.workers, args.validation_split, args.deterministic,
                                                                 args.effective_train_size, args.effective_valid_size,
@@ -751,7 +751,7 @@ def automated_deep_compression(model, criterion, optimizer, loggers, args):  # �
     adc.do_adc(model, args, optimizer_data, validate_fn, save_checkpoint_fn, train_fn)
 
 
-def greedy(model, criterion, optimizer, loggers, args): # 贪婪压缩
+def greedy(model, criterion, optimizer, loggers, args):  # 贪婪压缩
     train_loader, val_loader, test_loader, _ = get_data_loaders(datasets_fn, r'/home/tian/Desktop/image_test',
                                                                 args.batch_size,
                                                                 args.workers, args.validation_split, args.deterministic,
