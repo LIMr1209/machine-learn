@@ -17,6 +17,7 @@ from utils.progress_bar import ProgressBar
 from tqdm import tqdm
 import numpy as np
 import distiller.quantization as quantization
+from torchvision.models import resnet152
 
 seed = 1000
 t.cuda.manual_seed(seed)  # 随机数种子,当使用随机数时,关闭进程后再次生成和上次得一样
@@ -29,12 +30,12 @@ def test(**kwargs):
         model = getattr(models, opt.model)()
         if opt.load_model_path:
             checkpoint = t.load(opt.load_model_path)
-            model.load_state_dict(checkpoint["state_dict"])  # 加载模型
+            model.load_state_dict(checkpoint['state_dict'])  # 加载模型
         model.to(opt.device)
         model.eval()  # 把module设成测试模式，对Dropout和BatchNorm有影响
         # data
-        test_data = DatasetFromFilename(opt.data_root, test=True)  # 测试集
-        # test_data = DatasetFromFilename(opt.data_root, train=True)
+        # test_data = DatasetFromFilename(opt.data_root, test=True)  # 测试集
+        test_data = DatasetFromFilename(opt.data_root, train=True)
         test_dataloader = DataLoader(test_data, batch_size=opt.batch_size, shuffle=False, num_workers=opt.num_workers)
         correct = 0
         total = 0
@@ -127,11 +128,7 @@ def train(**kwargs):
         model.load_state_dict(checkpoint["state_dict"])
         optimizer = checkpoint['optimizer']
     model.to(opt.device)  # 加载模型到 GPU
-    # step4: data_image
-    train_data = DatasetFromFilename(opt.data_root, train=True)  # 训练集
-    val_data = DatasetFromFilename(opt.data_root, train=False)  # 验证集
-    train_dataloader = DataLoader(train_data, opt.batch_size, shuffle=True, num_workers=opt.num_workers)  # 训练集加载器
-    val_dataloader = DataLoader(val_data, opt.batch_size, shuffle=False, num_workers=opt.num_workers)  # 验证集加载器
+
     if opt.compress:
         compression_scheduler = distiller.file_config(model, optimizer, opt.compress,
                                                       compression_scheduler)  # 加载模型修剪计划表
@@ -139,6 +136,11 @@ def train(**kwargs):
     # train
     for epoch in range(start_epoch, opt.max_epoch):
         model.train()
+        # step4: data_image
+        train_data = DatasetFromFilename(opt.data_root, train=True)  # 训练集
+        val_data = DatasetFromFilename(opt.data_root, train=False)  # 验证集
+        train_dataloader = DataLoader(train_data, opt.batch_size, shuffle=True, num_workers=opt.num_workers)  # 训练集加载器
+        val_dataloader = DataLoader(val_data, opt.batch_size, shuffle=False, num_workers=opt.num_workers)  # 验证集加载器
         if opt.pruning:
             compression_scheduler.on_epoch_begin(epoch)  # epoch 开始修剪
         train_losses.reset()  # 重置仪表
