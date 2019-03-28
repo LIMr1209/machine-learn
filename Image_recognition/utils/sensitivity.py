@@ -8,8 +8,7 @@ from utils.utils import accuracy, AverageMeter
 
 
 def val(model, criterion, dataloader, epoch=None, msglogger=None):
-
-   with t.no_grad():
+    with t.no_grad():
         """
         计算模型在验证集上的准确率等信息
         """
@@ -21,7 +20,7 @@ def val(model, criterion, dataloader, epoch=None, msglogger=None):
         if not msglogger:
             val_progressor = ProgressBar(mode="Val  ", epoch=epoch, total_epoch=opt.max_epoch, model_name=opt.model,
                                          total=len(dataloader))
-        for ii, (data, labels) in enumerate(dataloader):
+        for ii, (data, labels, img_path) in enumerate(dataloader):
             input = data.to(opt.device)
             labels = labels.to(opt.device)
             score = model(input)

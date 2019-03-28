@@ -9,7 +9,6 @@ normalize = T.Normalize(mean=[0.485, 0.456, 0.406],
 
 transforms = T.Compose([
     T.Resize(opt.image_size),
-    T.CenterCrop(opt.image_size),
     T.ToTensor(),
     normalize
 ])

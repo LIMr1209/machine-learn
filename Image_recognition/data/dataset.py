@@ -7,7 +7,7 @@ from config import opt
 
 class DatasetFromFilename(data.Dataset):
 
-    def __init__(self, root, transforms=None, train=True, test=False):
+    def __init__(self, root, transforms=None, flag=None):
         """
         主要目标： 获取所有图片的地址，并根据训练，验证，测试划分数据
         训练 train=True,Test=False
@@ -15,42 +15,60 @@ class DatasetFromFilename(data.Dataset):
         测试 train=True,test=True
         """
         splitter = ImageFolderSplitter(root)
-        self.train = train
-        self.test = test
-        if self.test:
+        self.flag = flag
+        if self.flag == 'test':
             self.imgs, self.labels = splitter.getValidationDataset()  # 测试数据
-        else:
+        elif self.flag == 'train':
             self.imgs, self.labels = splitter.getTrainingDataset()
             num = len(self.imgs)
-            if self.train:  # 训练数据
-                self.imgs = self.imgs[:int(0.7 * num)]
-                self.labels = self.labels[:int(0.7 * num)]
-            else:  # 验证数据
-                self.imgs = self.imgs[int(0.7 * num):]
-                self.labels = self.labels[int(0.7 * num):]
+            # 训练数据
+            self.imgs = self.imgs[:int(0.7 * num)]
+            self.labels = self.labels[:int(0.7 * num)]
+        elif self.flag == 'valid':
+            self.imgs, self.labels = splitter.getTrainingDataset()
+            num = len(self.imgs)
+            self.imgs = self.imgs[int(0.7 * num):]
+            self.labels = self.labels[int(0.7 * num):]
 
         if transforms is None:  # 转化器 图片转tensor
             # 将tensor正则化   mean 均值 std 方差 Normalized_image=(image-mean)/std
             normalize = T.Normalize(mean=[0.485, 0.456, 0.406],
                                     std=[0.229, 0.224, 0.225])
             # 数据增强
-            if self.test or not self.train:
-                # 训练 测试
+            if self.flag == 'test':
+                # 测试
+                self.transforms = T.Compose([
+                    T.Resize((opt.image_size, opt.image_size)),  # 缩放图片（Image）,保持长宽比不变，224x224
+                    T.ToTensor(),  # 转tensor
+                    normalize  # 归一化
+                ])
+            elif self.flag == 'train':
+                # 训练
                 self.transforms = T.Compose([
                     T.Resize(opt.image_size),  # #缩放图片（Image）,保持长宽比不变，最短边为224像素
                     T.CenterCrop(opt.image_size),  # 在图片的中间区域进行裁剪
                     T.ToTensor(),  # 转tensor
                     normalize  # 归一化
                 ])
-            else:
+            elif self.flag == 'valid':
                 # 验证
+                # self.transforms = T.Compose([
+                #     T.Resize((256, 256)),  # 缩放图片（Image）,保持长宽比不变，256x256
+                #     T.RandomResizedCrop(opt.image_size),  # 在一个随机的位置进行裁剪,224x224
+                #     T.RandomHorizontalFlip(p=0.5),  # 随机水平翻转给定的PIL.Image,概率为0.5
+                #     T.RandomVerticalFlip(p=0.5),  # 随机垂直翻转给定的PIL.Image,概率为0.5
+                #     T.RandomRotation(degrees=45),  # 随机翻转 (-45,45)度
+                #     # T.ColorJitter(brightness=1, contrast=1, hue=0.5),  # 随机改变图像的亮度、对比度和饱和度
+                #     T.ToTensor(),  # 转tensor
+                #     normalize  # 归一化
+                # ])
                 self.transforms = T.Compose([
-                    T.Resize(256),  # #缩放图片（Image）,保持长宽比不变，最短边为224像素
-                    T.RandomResizedCrop(opt.image_size),  # 在一个随机的位置进行裁剪
-                    T.RandomHorizontalFlip(),
-                    T.ToTensor(),
-                    normalize
+                    T.Resize(opt.image_size),  # #缩放图片（Image）,保持长宽比不变，最短边为224像素
+                    T.CenterCrop(opt.image_size),  # 在图片的中间区域进行裁剪
+                    T.ToTensor(),  # 转tensor
+                    normalize  # 归一化
                 ])
+
 
     def __getitem__(self, index):
         """
@@ -63,14 +81,14 @@ class DatasetFromFilename(data.Dataset):
         data = Image.open(img_path)
         data = data.convert("RGB")  # 如果有4通道图片转化为3通道
         data = self.transforms(data)
-        return data, label  # 返回数据级标签
+        return data, label, img_path  # 返回数据级标签图片路径
 
     def __len__(self):
         return len(self.imgs)
 
 
 if __name__ == '__main__':
-    img = DatasetFromFilename(r'/home/tian/Desktop/image', test=True)
+    img = DatasetFromFilename(r'/home/tian/Desktop/image', flag='test')
     splitter = ImageFolderSplitter('/home/tian/Desktop/image')
     x_train, y_train = splitter.getTrainingDataset()
     x_valid, y_valid = splitter.getValidationDataset()

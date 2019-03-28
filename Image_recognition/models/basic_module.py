@@ -22,7 +22,7 @@ class BasicModule(t.nn.Module):
         checkpoint = t.load(path)
         return checkpoint
 
-    def save(self, state, filename='./checkpoint/' + opt.model + '.pth.tar'):
+    def save(self, state, filename='./checkpoint/' + opt.model + '_pruning.pth.tar' if opt.pruning else './checkpoint/' + opt.model + '.pth.tar'):
         """
         保存模型，默认使用“模型名字+时间”作为文件名
         """

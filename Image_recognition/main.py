@@ -1,3 +1,4 @@
+import csv
 import math
 import os
 import operator
@@ -17,7 +18,6 @@ from utils.progress_bar import ProgressBar
 from tqdm import tqdm
 import numpy as np
 import distiller.quantization as quantization
-from torchvision.models import resnet152
 
 seed = 1000
 t.cuda.manual_seed(seed)  # 随机数种子,当使用随机数时,关闭进程后再次生成和上次得一样
@@ -29,13 +29,13 @@ def test(**kwargs):
         # configure model
         model = getattr(models, opt.model)()
         if opt.load_model_path:
+            # model = t.load(opt.load_model_path)
             checkpoint = t.load(opt.load_model_path)
             model.load_state_dict(checkpoint['state_dict'])  # 加载模型
         model.to(opt.device)
         model.eval()  # 把module设成测试模式，对Dropout和BatchNorm有影响
         # data
-        # test_data = DatasetFromFilename(opt.data_root, test=True)  # 测试集
-        test_data = DatasetFromFilename(opt.data_root, train=True)
+        test_data = DatasetFromFilename(opt.data_root, flag='train')  # 测试集
         test_dataloader = DataLoader(test_data, batch_size=opt.batch_size, shuffle=False, num_workers=opt.num_workers)
         correct = 0
         total = 0
@@ -47,7 +47,8 @@ def test(**kwargs):
             quantizer.prepare_model()
             model.to(opt.device)
         model.eval()  # 把module设成测试模式，对Dropout和BatchNorm有影响
-        for ii, (data, labels) in tqdm(enumerate(test_dataloader)):
+        err_img = [('img_path', 'result', 'label')]
+        for ii, (data, labels, img_path) in tqdm(enumerate(test_dataloader)):
             input = data.to(opt.device)
             labels = labels.to(opt.device)
             score = model(input)
@@ -57,10 +58,17 @@ def test(**kwargs):
             results = score.max(dim=1)[1].detach()  # max 返回每一行中最大值的那个元素，且返回其索引（返回最大元素在这一行的列索引） 返回最有可能的一类
             # batch_results = [(labels_.item(), opt.cate_classes[label_]) for labels_, label_ in zip(labels, label)]
             total += input.size(0)
-
             correct += (results == labels).sum().item()
+            error_list = (results != labels).tolist()
+            err_img.extend([(img_path[i], opt.cate_classes[results[i]], opt.cate_classes[labels[i]]) for i, j in
+                            enumerate(error_list) if j == 1])  # 识别错误图片地址,识别标签,正确标签,添加到错误列表
 
         print('Test Accuracy of the model on the {} test images: {} %'.format(total, 100 * correct / total))
+        # 错误图片写入csv
+        with open('error_img.csv', 'w', newline='') as f:
+            csv_write = csv.writer(f)
+            for err in err_img:
+                csv_write.writerow(err)
         # 保存量化模型
         if opt.quantize_eval:
             model.save({
@@ -68,6 +76,7 @@ def test(**kwargs):
                 "state_dict": model.state_dict(),
                 'quantizer_metadata': model.quantizer_metadata
             }, './checkpoint/ResNet152_quantize.pth')
+            t.save(model.models, './checkpoint/ResNet152_quantize1.pth')
 
 
 def recognition(**kwargs):
@@ -137,8 +146,8 @@ def train(**kwargs):
     for epoch in range(start_epoch, opt.max_epoch):
         model.train()
         # step4: data_image
-        train_data = DatasetFromFilename(opt.data_root, train=True)  # 训练集
-        val_data = DatasetFromFilename(opt.data_root, train=False)  # 验证集
+        train_data = DatasetFromFilename(opt.data_root, flag='train')  # 训练集
+        val_data = DatasetFromFilename(opt.data_root, flag='valid')  # 验证集
         train_dataloader = DataLoader(train_data, opt.batch_size, shuffle=True, num_workers=opt.num_workers)  # 训练集加载器
         val_dataloader = DataLoader(val_data, opt.batch_size, shuffle=False, num_workers=opt.num_workers)  # 验证集加载器
         if opt.pruning:
@@ -151,7 +160,7 @@ def train(**kwargs):
         train_progressor = ProgressBar(mode="Train  ", epoch=epoch, total_epoch=opt.max_epoch,
                                        model_name=opt.model,
                                        total=len(train_dataloader))
-        for ii, (data, labels) in enumerate(train_dataloader):
+        for ii, (data, labels, img_path) in enumerate(train_dataloader):
             if opt.pruning:
                 compression_scheduler.on_minibatch_begin(epoch, ii, steps_per_epoch, optimizer)  # batch 开始修剪
             train_progressor.current = ii + 1  # 训练集当前进度
@@ -188,6 +197,7 @@ def train(**kwargs):
             train_progressor.current_top5 = train_top5.avg
             if (ii + 1) % opt.print_freq == 0:
                 if opt.vis:
+                    vis.img('enhance', (input.data.cpu() * 0.225 + 0.45).clamp(min=0, max=1))  # 查看数据增强图片
                     vis.plot('loss', train_losses.val)  # 绘图
             train_progressor()  # 打印进度
         # train_progressor.done()  # 保存训练结果为txt
@@ -233,7 +243,7 @@ def train(**kwargs):
 # 模型敏感性分析
 def sensitivity(**kwargs):
     opt._parse(kwargs)
-    test_data = DatasetFromFilename(opt.data_root, test=True)
+    test_data = DatasetFromFilename(opt.data_root, flag='test')
     test_dataloader = DataLoader(test_data, batch_size=opt.batch_size, shuffle=False, num_workers=opt.num_workers)
     criterion = t.nn.CrossEntropyLoss().to(opt.device)  # 损失函数
     model = getattr(models, opt.model)()

@@ -15,6 +15,11 @@ def remove(dirs='/home/tian/Desktop/image'):
             if image is None:
                 os.remove(root + '/' + file)
                 print(root + '/' + file, '删除成功')
+                continue
+            if image.shape[0] < 224 or image.shape[1] < 224:
+                print(image.shape)
+                os.remove(root + '/' + file)
+                print(root + '/' + file, '删除成功')
 
 
 # 图片 resize
@@ -34,12 +39,20 @@ def RGBResize(width=224, height=224):
                 print(e)
 
 
+# 图片统计
+def func(dirs='/home/tian/Desktop/image'):
+    for root, dirs, files in os.walk(dirs):
+        if len(files) < 300:
+            print(root, '缺少', 300 - len(files))
+
+
 # 文件重命名
 def rename(dirs='/home/tian/Desktop/image/鼠标垫'):
     for i in os.listdir(dirs):
-        os.rename(os.path.join(dirs, i), os.path.join(dirs, '1'+str(i)))
+        os.rename(os.path.join(dirs, i), os.path.join(dirs, '1' + str(i)))
 
 
 if __name__ == '__main__':
     remove()
     # rename()
+    func()
