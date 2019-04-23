@@ -5,29 +5,29 @@ from utils.get_classes import get_classes
 
 
 class DefaultConfig(object):
-    env = 'opalus_recognltion'  # visdom 环境
-    vis_port = 8097  # visdom 端口
+    env = 'opalus_recognltion'  # 可视化visdom 环境
+    vis_port = 8097  # 可视化visdom 端口
     image_size = 224  # 图片尺寸
     model = 'ResNet152'  # 使用的模型，名字必须与models/__init__.py中的名字一致
 
     data_root = "/home/tian/Desktop/image"  # 数据集存放路径
     load_model_path = None  # 加载训练的模型的路径，为None代表不加载
-    load_model_path = './checkpoint/ResNet152.pth.tar'
+    # load_model_path = './checkpoint/ResNet152.pth.tar' # 加载训练的模型的路径，为None代表不加载
     batch_size = 16  # 每批训练数据的个数,显存不足,适当减少
-    use_gpu = True  # user GPU or not
-    num_workers = 4  # how many workers for loading data
-    print_freq = 2  # print info every N batch
-    vis = False  # 是否使用visdom可视化
+    use_gpu = True  # 是否使用GPU
+    num_workers = 4  # 用于数据预处理的多处理工作器的数量
+    print_freq = 2  # 数据可视化指数
+    vis = True  # 是否使用visdom可视化
 
-    cate_classes = get_classes(data_root)['class2num']  # 分类列表
-    num_classes = len(cate_classes)  # 分类个数
+    cate_classes = get_classes(data_root)['class2num']  # 图像分类标签列表
+    num_classes = len(cate_classes)  # 图像分类个数
     # pretrained = False  # 不加载预训练
     pretrained = True  # 加载预训练模型
-    # pruning = True  # 是否修剪
-    pruning = False
-    # compress = 'resnet152.schedule_sensitivity.yaml' # 压缩计划表
-    compress = None
-    # 量化
+    # pruning = True   # 压缩计划表
+    pruning = False  # 是否修剪
+    # compress = 'resnet152.schedule_sensitivity.yaml'  # 压缩计划表
+    compress = None  # 压缩计划表
+    # 量化 参数
     quantize_eval = False
     qe_calibration = None
     qe_mode = LinearQuantMode.SYMMETRIC
@@ -39,16 +39,17 @@ class DefaultConfig(object):
     qe_per_channel = False
     qe_stats_file = None
     qe_config_file = None
-    output_dir = 'logs'
+    output_dir = 'logs'  # 日志输出
     name = 'opalus_recognltion'  # 实验名
-    sensitivity = 'element'  # ['element', 'filter', 'channel']
-    sensitivity_range = [0.4, 0.9, 0.1]
+    sensitivity = 'element'  # ['element', 'filter', 'channel']  # 神经网络敏感性分析
+    sensitivity_range = [0.4, 0.9, 0.1]  # 尝试修剪比例
 
     max_epoch = 25  # 学习次数
-    lr = 0.001  # initial learning rate
-    lr_decay = 0.5  # when val_loss increase, lr = lr*lr_decay
+    lr = 0.001  # 学习效率
+    lr_decay = 0.5  # 误差增加时,学习效率下降
     weight_decay = 0e-5  # 损失函数
-    url = 'https://imgservice1.suning.cn/uimg1/b2c/image/nc5F5_pjiXv5sYaX2Hrx4w.jpg_800w_800h_4e'
+    url = 'https://imgservice1.suning.cn/uimg1/b2c/image/nc5F5_pjiXv5sYaX2Hrx4w.jpg_800w_800h_4e'  # 识别图片
+    error_img = 'error_img.csv'
 
     def _parse(self, kwargs):
         """

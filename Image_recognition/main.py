@@ -26,6 +26,8 @@ t.cuda.manual_seed(seed)  # 随机数种子,当使用随机数时,关闭进程�
 def test(**kwargs):
     with t.no_grad():
         opt._parse(kwargs)
+        if opt.vis:
+            vis = Visualizer(opt.env, port=opt.vis_port)  # 开启visdom 可视化
         # configure model
         model = getattr(models, opt.model)()
         if opt.load_model_path:
@@ -58,6 +60,10 @@ def test(**kwargs):
             results = score.max(dim=1)[1].detach()  # max 返回每一行中最大值的那个元素，且返回其索引（返回最大元素在这一行的列索引） 返回最有可能的一类
             # batch_results = [(labels_.item(), opt.cate_classes[label_]) for labels_, label_ in zip(labels, label)]
             total += input.size(0)
+            if opt.vis:
+                vis.img('image', (input.data.cpu() * 0.225 + 0.45).clamp(min=0, max=1))  # 查看数据增强图片
+                vis.log('labels:' + ','.join([opt.cate_classes[i] for i in labels.tolist()]))  # 正确标签
+                vis.log('results:' + ','.join([opt.cate_classes[i] for i in results.tolist()]))  # 识别标签
             correct += (results == labels).sum().item()
             error_list = (results != labels).tolist()
             err_img.extend([(img_path[i], opt.cate_classes[results[i]], opt.cate_classes[labels[i]]) for i, j in
@@ -65,7 +71,7 @@ def test(**kwargs):
 
         print('Test Accuracy of the model on the {} test images: {} %'.format(total, 100 * correct / total))
         # 错误图片写入csv
-        with open('error_img.csv', 'w', newline='') as f:
+        with open(opt.error_img, 'w', newline='') as f:
             csv_write = csv.writer(f)
             for err in err_img:
                 csv_write.writerow(err)
@@ -197,7 +203,7 @@ def train(**kwargs):
             train_progressor.current_top5 = train_top5.avg
             if (ii + 1) % opt.print_freq == 0:
                 if opt.vis:
-                    vis.img('enhance', (input.data.cpu() * 0.225 + 0.45).clamp(min=0, max=1))  # 查看数据增强图片
+                    vis.img('image', (input.data.cpu() * 0.225 + 0.45).clamp(min=0, max=1))  # 查看数据增强图片
                     vis.plot('loss', train_losses.val)  # 绘图
             train_progressor()  # 打印进度
         # train_progressor.done()  # 保存训练结果为txt
