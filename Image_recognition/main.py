@@ -18,6 +18,8 @@ from utils.progress_bar import ProgressBar
 from tqdm import tqdm
 import numpy as np
 import distiller.quantization as quantization
+from torch.utils.tensorboard import SummaryWriter
+from torchvision.utils import make_grid
 
 seed = 1000
 t.cuda.manual_seed(seed)  # 随机数种子,当使用随机数时,关闭进程后再次生成和上次得一样
@@ -105,6 +107,7 @@ def recognition(**kwargs):
 
 
 def train(**kwargs):
+    writer = SummaryWriter()
     opt._parse(kwargs)
     if opt.vis:
         vis = Visualizer(opt.env, port=opt.vis_port)  # 开启visdom 可视化
@@ -173,8 +176,10 @@ def train(**kwargs):
             # train model
             input = data.to(opt.device)
             target = labels.to(opt.device)
-
             score = model(input)  # 网络结构返回值
+            grid = make_grid(input)
+            writer.add_image('images', grid, 0)
+            writer.add_graph(model, input)
             loss = criterion(score, target)  # 计算损失
             if opt.pruning:
                 # Before running the backward phase, we allow the scheduler to modify the loss

@@ -4,7 +4,9 @@
 - 还需要通过`pip install -r requirements.txt` 安装其它依赖
 
 ## 用法
-如果想要使用visdom可视化，请先运行`python -m visdom.server`启动visdom服务
+- 如果想要使用visdom可视化，请先运行`python -m visdom.server`启动visdom服务
+
+- 如果想要使用tensorboard可视化,请先运行`tensorboard --logdir=runs`启动tensorboard服务
 
 ## 训练
 然后使用如下命令启动训练：
