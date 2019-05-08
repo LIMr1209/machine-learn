@@ -2,6 +2,8 @@ import csv
 import math
 import os
 import operator
+from datetime import datetime
+
 import distiller
 from distiller import apputils
 from distiller.data_loggers import *
@@ -11,9 +13,8 @@ import models
 from data.dataset import DatasetFromFilename
 from torch.utils.data import DataLoader
 from utils.image_loader import image_loader
-from utils.utils import AverageMeter, accuracy
+from utils.utils import AverageMeter, accuracy, write_err_img
 from utils.sensitivity import sensitivity_analysis, val
-from utils.visualize import Visualizer
 from utils.progress_bar import ProgressBar
 from tqdm import tqdm
 import numpy as np
@@ -28,8 +29,6 @@ t.cuda.manual_seed(seed)  # 随机数种子,当使用随机数时,关闭进程�
 def test(**kwargs):
     with t.no_grad():
         opt._parse(kwargs)
-        if opt.vis:
-            vis = Visualizer(opt.env, port=opt.vis_port)  # 开启visdom 可视化
         # configure model
         model = getattr(models, opt.model)()
         if opt.load_model_path:
@@ -62,10 +61,6 @@ def test(**kwargs):
             results = score.max(dim=1)[1].detach()  # max 返回每一行中最大值的那个元素，且返回其索引（返回最大元素在这一行的列索引） 返回最有可能的一类
             # batch_results = [(labels_.item(), opt.cate_classes[label_]) for labels_, label_ in zip(labels, label)]
             total += input.size(0)
-            if opt.vis:
-                vis.img('image', (input.data.cpu() * 0.225 + 0.45).clamp(min=0, max=1))  # 查看数据增强图片
-                vis.log('labels:' + ','.join([opt.cate_classes[i] for i in labels.tolist()]))  # 正确标签
-                vis.log('results:' + ','.join([opt.cate_classes[i] for i in results.tolist()]))  # 识别标签
             correct += (results == labels).sum().item()
             error_list = (results != labels).tolist()
             err_img.extend([(img_path[i], opt.cate_classes[results[i]], opt.cate_classes[labels[i]]) for i, j in
@@ -73,10 +68,7 @@ def test(**kwargs):
 
         print('Test Accuracy of the model on the {} test images: {} %'.format(total, 100 * correct / total))
         # 错误图片写入csv
-        with open(opt.error_img, 'w', newline='') as f:
-            csv_write = csv.writer(f)
-            for err in err_img:
-                csv_write.writerow(err)
+        write_err_img(err_img)
         # 保存量化模型
         if opt.quantize_eval:
             model.save({
@@ -107,10 +99,12 @@ def recognition(**kwargs):
 
 
 def train(**kwargs):
-    writer = SummaryWriter()
-    opt._parse(kwargs)
+    train_writer = None
+    value_writer = None
     if opt.vis:
-        vis = Visualizer(opt.env, port=opt.vis_port)  # 开启visdom 可视化
+        train_writer = SummaryWriter(log_dir='./runs/train_' + datetime.now().strftime('%y%m%d-%H-%M-%S'))
+        value_writer = SummaryWriter(log_dir='./runs/val_' + datetime.now().strftime('%y%m%d-%H-%M-%S'))
+    opt._parse(kwargs)
     previous_loss = 1e10  # 上次学习的loss
     best_precision = 0  # 最好的精确度
     start_epoch = 0
@@ -170,17 +164,19 @@ def train(**kwargs):
                                        model_name=opt.model,
                                        total=len(train_dataloader))
         for ii, (data, labels, img_path) in enumerate(train_dataloader):
+
             if opt.pruning:
                 compression_scheduler.on_minibatch_begin(epoch, ii, steps_per_epoch, optimizer)  # batch 开始修剪
             train_progressor.current = ii + 1  # 训练集当前进度
             # train model
             input = data.to(opt.device)
             target = labels.to(opt.device)
+            if train_writer:
+                grid = make_grid((input.data.cpu() * 0.225 + 0.45).clamp(min=0, max=1))
+                train_writer.add_image('train_images', grid, ii * (epoch + 1))  # 训练图片
             score = model(input)  # 网络结构返回值
-            grid = make_grid(input)
-            writer.add_image('images', grid, 0)
-            writer.add_graph(model, input)
-            loss = criterion(score, target)  # 计算损失
+            # 计算损失
+            loss = criterion(score, target)
             if opt.pruning:
                 # Before running the backward phase, we allow the scheduler to modify the loss
                 # (e.g. add regularization loss)
@@ -199,6 +195,7 @@ def train(**kwargs):
 
             precision1_train, precision5_train = accuracy(score, target, topk=(1, 5))  # top1 和 top5 的准确率
 
+            # writer.add_graph(model, input)
             # precision1_train, precision2_train = accuracy(score[0], target, topk=(1, 2))  # Inception3网络
             train_losses.update(loss.item(), input.size(0))
             train_top1.update(precision1_train[0].item(), input.size(0))
@@ -206,18 +203,21 @@ def train(**kwargs):
             train_progressor.current_loss = train_losses.avg
             train_progressor.current_top1 = train_top1.avg
             train_progressor.current_top5 = train_top5.avg
-            if (ii + 1) % opt.print_freq == 0:
-                if opt.vis:
-                    vis.img('image', (input.data.cpu() * 0.225 + 0.45).clamp(min=0, max=1))  # 查看数据增强图片
-                    vis.plot('loss', train_losses.val)  # 绘图
             train_progressor()  # 打印进度
+            if train_writer:
+                train_writer.add_scalar('train_loss', train_losses.avg, ii * (epoch + 1))  # 训练误差
+                train_writer.add_text('train_top1', 'train accuracy top1 %s' % train_top1.avg,
+                                      ii * (epoch + 1))  # top1准确率文本
+                train_writer.add_text('train_top5', 'train accuracy top5 %s' % train_top5.avg,
+                                      ii * (epoch + 1))  # top5准确率文本
+                train_writer.add_scalar('train_acc', train_top1.avg, ii * (epoch + 1))
         # train_progressor.done()  # 保存训练结果为txt
         # validate and visualize
         print('')
         if opt.pruning:
             distiller.log_weights_sparsity(model, epoch, loggers=[pylogger])  # 打印模型修剪结果
             compression_scheduler.on_epoch_end(epoch, optimizer)  # epoch 结束修剪
-        val_loss, val_top1, val_top5 = val(model, criterion, val_dataloader, epoch)  # 校验模型
+        val_loss, val_top1, val_top5 = val(model, criterion, val_dataloader, epoch, value_writer)  # 校验模型
         sparsity = distiller.model_sparsity(model)
         perf_scores_history.append(distiller.MutableNamedTuple({'sparsity': sparsity, 'top1': val_top1,
                                                                 'top5': val_top5, 'epoch': epoch}))

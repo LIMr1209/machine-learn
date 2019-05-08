@@ -1,5 +1,6 @@
 import torch
 from config import opt
+import csv
 
 
 # 仪表盘
@@ -20,6 +21,13 @@ class AverageMeter(object):
         self.sum += val * n
         self.count += n
         self.avg = self.sum / self.count
+
+
+def write_err_img(err_img):
+    with open(opt.error_img, 'w', newline='') as f:
+        csv_write = csv.writer(f)
+        for err in err_img:
+            csv_write.writerow(err)
 
 
 # 准确率

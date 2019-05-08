@@ -2,20 +2,22 @@ import distiller
 from functools import partial
 from distiller.data_loggers import *
 import torch as t
+from torchvision.utils import make_grid
+
 from config import opt
 from utils.progress_bar import ProgressBar
 from utils.utils import accuracy, AverageMeter
 
 
-def val(model, criterion, dataloader, epoch=None, msglogger=None):
+def val(model, criterion, dataloader, epoch=None, val_writer=None, msglogger=None):
     with t.no_grad():
         """
         计算模型在验证集上的准确率等信息
         """
         model.eval()
-        losses = AverageMeter()
-        top1 = AverageMeter()
-        top5 = AverageMeter()
+        val_losses = AverageMeter()
+        val_top1 = AverageMeter()
+        val_top5 = AverageMeter()
         val_progressor = None
         if not msglogger:
             val_progressor = ProgressBar(mode="Val  ", epoch=epoch, total_epoch=opt.max_epoch, model_name=opt.model,
@@ -24,24 +26,34 @@ def val(model, criterion, dataloader, epoch=None, msglogger=None):
             input = data.to(opt.device)
             labels = labels.to(opt.device)
             score = model(input)
+            if val_writer:
+                grid = make_grid((input.data.cpu() * 0.225 + 0.45).clamp(min=0, max=1))
+                val_writer.add_image('train_images', grid, ii * (epoch + 1))  # 测试图片
             loss = criterion(score, labels)
 
             precision1, precision5 = accuracy(score, labels, topk=(1, 5))  # top1 和 top2 的准确率
-            losses.update(loss.item(), input.size(0))
-            top1.update(precision1[0].item(), input.size(0))
-            top5.update(precision5[0].item(), input.size(0))
+            val_losses.update(loss.item(), input.size(0))
+            val_top1.update(precision1[0].item(), input.size(0))
+            val_top5.update(precision5[0].item(), input.size(0))
             if val_progressor:
                 val_progressor.current = ii + 1
-                val_progressor.current_loss = losses.avg
-                val_progressor.current_top1 = top1.avg
-                val_progressor.current_top5 = top5.avg
+                val_progressor.current_loss = val_losses.avg
+                val_progressor.current_top1 = val_top1.avg
+                val_progressor.current_top5 = val_top5.avg
+                if val_writer:
+                    val_writer.add_scalar('train_loss', val_losses.avg, ii * (epoch + 1))  # 训练误差
+                    val_writer.add_text('train_top1', 'train accuracy top1 %s%%' % val_top1.avg,
+                                        ii * (epoch + 1))  # top1准确率文本
+                    val_writer.add_text('train_top5', 'train accuracy top5 %s%%' % val_top5.avg,
+                                        ii * (epoch + 1))  # top5准确率文本
+                    val_writer.add_pr_curve('val_acc', val_top1.avg, ii * (epoch + 1))  # 精确率
                 val_progressor()
         if msglogger:
             msglogger.info('==> Top1: %.3f    Top5: %.3f    Loss: %.3f\n',
-                           top1.avg, top5.avg, losses.avg)
+                           val_top1.avg, val_top5.avg, val_losses.avg)
         if val_progressor:
             print('')
-        return [losses.avg, top1.avg, top5.avg]
+        return [val_losses.avg, val_top1.avg, val_top5.avg]
 
 
 class missingdict(dict):
