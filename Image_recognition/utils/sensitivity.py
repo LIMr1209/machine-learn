@@ -42,9 +42,10 @@ def val(model, criterion, dataloader, epoch=None, val_writer=None, msglogger=Non
                     val_writer.add_scalar('loss', val_losses.avg, ii * (epoch + 1))  # 训练误差
                     val_writer.add_text('top1', 'val accuracy top1 %.2f%%' % val_top1.avg,
                                         ii * (epoch + 1))  # top1准确率文本
-                    val_writer.add_text('top5', 'val accuracy top5 %.2f%%' % val_top5.avg,
-                                        ii * (epoch + 1))  # top5准确率文本
-                    val_writer.add_scalar('acc', val_top1.avg, ii * (epoch + 1))
+                    val_writer.add_scalars('accuracy', {'top1': val_top1.avg,
+                                                        'top5': val_top5.avg,
+                                                        'loss': val_losses.avg}, ii * (epoch + 1))
+
                 val_progressor()
         if msglogger:
             msglogger.info('==> Top1: %.3f    Top5: %.3f    Loss: %.3f\n',

@@ -204,12 +204,12 @@ def train(**kwargs):
             train_progressor.current_top5 = train_top5.avg
             train_progressor()  # 打印进度
             if train_writer:
-                train_writer.add_scalar('train_loss', train_losses.avg, ii * (epoch + 1))  # 训练误差
-                train_writer.add_text('train_top1', 'train accuracy top1 %s' % train_top1.avg,
+                train_writer.add_scalar('loss', train_losses.avg, ii * (epoch + 1))  # 训练误差
+                train_writer.add_text('top1', 'train accuracy top1 %s' % train_top1.avg,
                                       ii * (epoch + 1))  # top1准确率文本
-                train_writer.add_text('train_top5', 'train accuracy top5 %s' % train_top5.avg,
-                                      ii * (epoch + 1))  # top5准确率文本
-                train_writer.add_scalar('train_acc', train_top1.avg, ii * (epoch + 1))
+                train_writer.add_scalars('accuracy', {'top1': train_top1.avg,
+                                                      'top5': train_top5.avg,
+                                                      'loss': train_losses.avg}, ii * (epoch + 1))
         # train_progressor.done()  # 保存训练结果为txt
         # validate and visualize
         print('')

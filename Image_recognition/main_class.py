@@ -124,9 +124,9 @@ class Classifier:
             self.train_writer.add_scalar('loss', self.train_losses.avg, ii * (epoch + 1))  # 训练误差
             self.train_writer.add_text('top1', 'train accuracy top1 %.2f%%' % self.train_top1.avg,
                                        ii * (epoch + 1))  # top1准确率文本
-            self.train_writer.add_text('top5', 'train accuracy top5 %.2f%%' % self.train_top5.avg,
-                                       ii * (epoch + 1))  # top5准确率文本
-            self.train_writer.add_scalar('acc', self.train_top1.avg, ii * (epoch + 1))
+            self.train_writer.add_scalars('accuracy', {'top1': self.train_top1.avg,
+                                                       'top5': self.train_top5.avg,
+                                                       'loss': self.train_losses.avg}, ii * (epoch + 1))
 
     def train(self):
         previous_loss = 1e10  # 上次学习的loss
