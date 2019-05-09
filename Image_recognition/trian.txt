@@ -1,5 +1,5 @@
 一 环境准确
-   Python3.6  Pytorch1.01(机器学习框架) nvidia显卡(GPU)  visdom(可视化) sklearn
+   Python3.6  Pytorch1.1.0(机器学习框架) nvidia显卡(GPU)  tensorboard(可视化) sklearn
 二 数据准备
   1.将图片文件按照标签分类, 使用sklearn随机按照一定比例划分为训练集,验证集,测试集
   2.将图片数据进行随机旋转,及裁剪,进行归一化处理 

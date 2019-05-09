@@ -25,6 +25,9 @@ for j in range(10):
         # writer.add_image_with_boxes('imagebox', grid, torch.Tensor([[10, 10, 40, 40], [40, 40, 60, 60]]), i)
         train_writer.add_text('train_ext', 'text logged at step:' + str(i), i)  # 准确率文本
         a = torch.from_numpy(np.random.randint(2, size=100))
+        # train_writer.add_scalars('data/scalar_group', {'x': i,
+        #                                          'y': i,
+        #                                          'loss': i}, i)
         b = torch.from_numpy(np.random.rand(100))
         train_writer.add_pr_curve('train_acc', a, b, i)  # 精确率
     train_writer.close()

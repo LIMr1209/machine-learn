@@ -1,4 +1,3 @@
-import csv
 import math
 import os
 import operator
@@ -42,7 +41,7 @@ def test(**kwargs):
         test_dataloader = DataLoader(test_data, batch_size=opt.batch_size, shuffle=False, num_workers=opt.num_workers)
         correct = 0
         total = 0
-        print('测试数据集大小', len(test_dataloader))
+        msglogger.info('测试数据集大小', len(test_dataloader))
         # 量化
         if opt.quantize_eval:
             model.cpu()
@@ -66,7 +65,7 @@ def test(**kwargs):
             err_img.extend([(img_path[i], opt.cate_classes[results[i]], opt.cate_classes[labels[i]]) for i, j in
                             enumerate(error_list) if j == 1])  # 识别错误图片地址,识别标签,正确标签,添加到错误列表
 
-        print('Test Accuracy of the model on the {} test images: {} %'.format(total, 100 * correct / total))
+        msglogger.info('Test Accuracy of the model on the {} test images: {} %'.format(total, 100 * correct / total))
         # 错误图片写入csv
         write_err_img(err_img)
         # 保存量化模型

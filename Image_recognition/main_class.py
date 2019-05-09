@@ -13,7 +13,6 @@ from torch.utils.data import DataLoader
 from utils.image_loader import image_loader
 from utils.utils import AverageMeter, accuracy, write_err_img
 from utils.sensitivity import sensitivity_analysis, val
-from utils.visualize import Visualizer
 from utils.progress_bar import ProgressBar
 from tqdm import tqdm
 import numpy as np
@@ -27,10 +26,9 @@ t.cuda.manual_seed(seed)  # 随机数种子,当使用随机数时,关闭进程�
 
 class Classifier:
     def __init__(self, **kwargs):
-        self.opt = opt._parse(kwargs)
-        self.image = image_loader(self.opt.url)
+        opt._parse(kwargs)
+        self.opt = opt
         self.model = getattr(models, self.opt.model)()
-        self.vis = Visualizer(self.opt.env, port=self.opt.vis_port)  # 开启visdom 可视化
         self.criterion = t.nn.CrossEntropyLoss().to(self.opt.device)
         # 1. 铰链损失（Hinge Loss）：主要用于支持向量机（SVM） 中；
         # 2. 互熵损失 （Cross Entropy Loss，Softmax Loss ）：用于Logistic 回归与Softmax 分类中；
@@ -104,7 +102,6 @@ class Classifier:
                 "state_dict": self.model.state_dict(),
                 'quantizer_metadata': self.model.quantizer_metadata
             }, './checkpoint/ResNet152_quantize.pth')
-            t.save(self.model.models, './checkpoint/ResNet152_quantize1.pth')
 
     def quantize_model(self):
         if self.opt.quantize_eval:
@@ -124,12 +121,12 @@ class Classifier:
         if self.train_writer:
             grid = make_grid((input.data.cpu() * 0.225 + 0.45).clamp(min=0, max=1))
             self.train_writer.add_image('train_images', grid, ii * (epoch + 1))  # 训练图片
-            self.train_writer.add_scalar('train_loss', self.train_losses.avg, ii * (epoch + 1))  # 训练误差
-            self.train_writer.add_text('train_top1', 'train accuracy top1 %s' % self.train_top1.avg,
+            self.train_writer.add_scalar('loss', self.train_losses.avg, ii * (epoch + 1))  # 训练误差
+            self.train_writer.add_text('top1', 'train accuracy top1 %.2f%%' % self.train_top1.avg,
                                        ii * (epoch + 1))  # top1准确率文本
-            self.train_writer.add_text('train_top5', 'train accuracy top5 %s' % self.train_top5.avg,
+            self.train_writer.add_text('top5', 'train accuracy top5 %.2f%%' % self.train_top5.avg,
                                        ii * (epoch + 1))  # top5准确率文本
-            self.train_writer.add_scalar('train_acc', self.train_top1.avg, ii * (epoch + 1))
+            self.train_writer.add_scalar('acc', self.train_top1.avg, ii * (epoch + 1))
 
     def train(self):
         previous_loss = 1e10  # 上次学习的loss
@@ -230,7 +227,7 @@ class Classifier:
         self.model.eval()  # 把module设成测试模式，对Dropout和BatchNorm有影响
         correct = 0
         total = 0
-        print('测试数据集大小', len(self.test_dataloader))
+        msglogger.info('测试数据集大小', len(self.test_dataloader))
         # 量化
         self.quantize_model()
         self.model.eval()  # 把module设成测试模式，对Dropout和BatchNorm有影响
@@ -251,7 +248,7 @@ class Classifier:
                 [(img_path[i], self.opt.cate_classes[results[i]], self.opt.cate_classes[labels[i]]) for i, j in
                  enumerate(error_list) if j == 1])  # 识别错误图片地址,识别标签,正确标签,添加到错误列表
 
-        print('Test Accuracy of the model on the {} test images: {} %'.format(total, 100 * correct / total))
+        msglogger.info('Test Accuracy of the model on the {} test images: {} %'.format(total, 100 * correct / total))
         # 错误图片写入csv
         write_err_img(err_img)
         # 保存量化模型
@@ -260,7 +257,8 @@ class Classifier:
     def recognition(self):
         self.load_model()
         self.model.eval()
-        image = self.image.view(1, 3, self.opt.image_size, self.opt.image_size).to(self.opt.device)  # 转换image
+        img = image_loader(self.opt.url)
+        image = img.view(1, 3, self.opt.image_size, self.opt.image_size).to(self.opt.device)  # 转换image
         outputs = self.model(image)
         result = {}
         for i in range(self.opt.num_classes):  # 计算各分类比重
@@ -277,18 +275,18 @@ class Classifier:
                                     msglogger)
 
 
-def train():
-    train_classifier = Classifier()
+def train(**kwargs):
+    train_classifier = Classifier(**kwargs)
     train_classifier.train()
 
 
-def recognition():
-    reco_classifier = Classifier()
+def recognition(**kwargs):
+    reco_classifier = Classifier(**kwargs)
     reco_classifier.recognition()
 
 
-def test():
-    test_classifier = Classifier()
+def test(**kwargs):
+    test_classifier = Classifier(**kwargs)
     test_classifier.train()
 
 
