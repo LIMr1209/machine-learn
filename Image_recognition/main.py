@@ -41,7 +41,7 @@ def test(**kwargs):
         test_dataloader = DataLoader(test_data, batch_size=opt.batch_size, shuffle=False, num_workers=opt.num_workers)
         correct = 0
         total = 0
-        msglogger.info('测试数据集大小', len(test_dataloader))
+        msglogger.info('测试数据集大小%s', len(test_dataloader))
         # 量化
         if opt.quantize_eval:
             model.cpu()
@@ -226,7 +226,7 @@ def train(**kwargs):
         # 按稀疏度排序为主排序键，然后按top1、top5、epoch排序
         perf_scores_history.sort(key=operator.attrgetter('sparsity', 'top1', 'top5', 'epoch'), reverse=True)
         for score in perf_scores_history[:1]:
-            msglogger.info('==> Best [Top1: %.3f   Top5: %.3f   Sparsity: %.2f on epoch: %d lr: %d]',
+            msglogger.info('==> Best [Top1: %.3f   Top5: %.3f   Sparsity: %.2f on epoch: %d lr: %f]',
                            score.top1, score.top5, score.sparsity, score.epoch, lr)
 
         is_best = epoch == perf_scores_history[0].epoch  # 当前epoch 和最佳epoch 一样
