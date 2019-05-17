@@ -5,19 +5,17 @@ from utils.get_classes import get_classes
 
 
 class DefaultConfig(object):
-    env = 'opalus_recognltion'  # 可视化visdom 环境
-    vis_port = 8097  # 可视化visdom 端口
     image_size = 224  # 图片尺寸
     model = 'ResNet152'  # 使用的模型，名字必须与models/__init__.py中的名字一致
 
-    data_root = "/home/tian/Desktop/image"  # 数据集存放路径
-    load_model_path = None  # 加载训练的模型的路径，为None代表不加载
-    # load_model_path = './checkpoint/ResNet152.pth.tar' # 加载训练的模型的路径，为None代表不加载
+    data_root = "/image/image"  # 数据集存放路径
+    # load_model_path = None  # 加载训练的模型的路径，为None代表不加载
+    load_model_path = './checkpoint/ResNet152.pth.tar'  # 加载训练的模型的路径，为None代表不加载
     batch_size = 16  # 每批训练数据的个数,显存不足,适当减少
     use_gpu = True  # 是否使用GPU
     num_workers = 4  # 用于数据预处理的多处理工作器的数量
-    print_freq = 2  # 数据可视化指数
-    vis = True  # 是否使用visdom可视化
+    print_freq = 100  # 数据可视化指数
+    vis = False  # 是否使用tensorboard可视化
 
     cate_classes = get_classes(data_root)['class2num']  # 图像分类标签列表
     num_classes = len(cate_classes)  # 图像分类个数

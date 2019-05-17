@@ -4,7 +4,7 @@ from PIL import Image
 
 
 # 数据清理 删除gif png 以及无效图片
-def remove(dirs='/home/tian/Desktop/image'):
+def remove(dirs='/home/tian/Desktop/image_new'):
     for root, dirs, files in os.walk(dirs):
         for file in files:
             if file.endswith('.gif') or file.endswith('.png'):
@@ -40,7 +40,7 @@ def RGBResize(width=224, height=224):
 
 
 # 图片统计
-def func(dirs='/home/tian/Desktop/image'):
+def image_stat(dirs='/home/tian/Desktop/image_test'):
     for root, dirs, files in os.walk(dirs):
         if len(files) < 300:
             print(root, '缺少', 300 - len(files))
@@ -55,4 +55,4 @@ def rename(dirs='/home/tian/Desktop/image/鼠标垫'):
 if __name__ == '__main__':
     remove()
     # rename()
-    func()
+    image_stat()

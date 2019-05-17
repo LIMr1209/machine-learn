@@ -88,7 +88,7 @@ class DatasetFromFilename(data.Dataset):
 
 
 if __name__ == '__main__':
-    img = DatasetFromFilename(r'/home/tian/Desktop/image', flag='test')
-    splitter = ImageFolderSplitter('/home/tian/Desktop/image')
+    img = DatasetFromFilename(r'/image/image', flag='test')
+    splitter = ImageFolderSplitter('/image/image')
     x_train, y_train = splitter.getTrainingDataset()
     x_valid, y_valid = splitter.getValidationDataset()

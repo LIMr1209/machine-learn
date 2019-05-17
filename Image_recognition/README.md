@@ -14,8 +14,6 @@
 python main.py train --env='test' --use-gpu --print-freq=4
 ```
 可选参数
-- env = 'opalus_recognltion'  # 可视化visdom 环境
-- vis_port = 8097  # 可视化visdom 端口
 - image_size = 224  # 图片尺寸
 - model = 'ResNet152'  # 使用的模型，名字必须与models/__init__.py中的名字一致
 - data_root = "/home/tian/Desktop/image"  # 数据集存放路径
@@ -24,7 +22,7 @@ python main.py train --env='test' --use-gpu --print-freq=4
 - use_gpu = True  # 是否使用GPU
 - num_workers = 4  # 用于数据预处理的多处理工作器的数量
 - print_freq = 2  # 数据可视化指数
-- vis = False  # 是否使用visdom可视化
+- vis = False  # 是否使用tensorboard可视化
 - pretrained = True  # 加载预训练模型
 - max_epoch = 25  # 学习次数
 - lr = 0.001  # 学习效率

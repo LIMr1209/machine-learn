@@ -9,7 +9,7 @@ from utils.progress_bar import ProgressBar
 from utils.utils import accuracy, AverageMeter
 
 
-def val(model, criterion, dataloader, epoch=None, val_writer=None, msglogger=None):
+def val(model, criterion, dataloader, epoch=None, val_writer=None, lr=None, msglogger=None):
     with t.no_grad():
         """
         计算模型在验证集上的准确率等信息
@@ -21,6 +21,7 @@ def val(model, criterion, dataloader, epoch=None, val_writer=None, msglogger=Non
         val_progressor = None
         if not msglogger:
             val_progressor = ProgressBar(mode="Val  ", epoch=epoch, total_epoch=opt.max_epoch, model_name=opt.model,
+                                         lr=lr,
                                          total=len(dataloader))
         for ii, (data, labels, img_path) in enumerate(dataloader):
             input = data.to(opt.device)
@@ -36,15 +37,16 @@ def val(model, criterion, dataloader, epoch=None, val_writer=None, msglogger=Non
                 val_progressor.current_loss = val_losses.avg
                 val_progressor.current_top1 = val_top1.avg
                 val_progressor.current_top5 = val_top5.avg
-                if val_writer:
-                    grid = make_grid((input.data.cpu() * 0.225 + 0.45).clamp(min=0, max=1))
-                    val_writer.add_image('val_images', grid, ii * (epoch + 1))  # 测试图片
-                    val_writer.add_scalar('loss', val_losses.avg, ii * (epoch + 1))  # 训练误差
-                    val_writer.add_text('top1', 'val accuracy top1 %.2f%%' % val_top1.avg,
-                                        ii * (epoch + 1))  # top1准确率文本
-                    val_writer.add_scalars('accuracy', {'top1': val_top1.avg,
-                                                        'top5': val_top5.avg,
-                                                        'loss': val_losses.avg}, ii * (epoch + 1))
+                if ii % opt.print_freq:
+                    if val_writer:
+                        grid = make_grid((input.data.cpu() * 0.225 + 0.45).clamp(min=0, max=1))
+                        val_writer.add_image('val_images', grid, ii * (epoch + 1))  # 测试图片
+                        val_writer.add_scalar('loss', val_losses.avg, ii * (epoch + 1))  # 训练误差
+                        val_writer.add_text('top1', 'val accuracy top1 %.2f%%' % val_top1.avg,
+                                            ii * (epoch + 1))  # top1准确率文本
+                        val_writer.add_scalars('accuracy', {'top1': val_top1.avg,
+                                                            'top5': val_top5.avg,
+                                                            'loss': val_losses.avg}, ii * (epoch + 1))
 
                 val_progressor()
         if msglogger:

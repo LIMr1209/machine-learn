@@ -118,15 +118,16 @@ class Classifier:
             self.model.to(self.opt.device)
 
     def visualization_train(self, input, ii, epoch):
-        if self.train_writer:
-            grid = make_grid((input.data.cpu() * 0.225 + 0.45).clamp(min=0, max=1))
-            self.train_writer.add_image('train_images', grid, ii * (epoch + 1))  # 训练图片
-            self.train_writer.add_scalar('loss', self.train_losses.avg, ii * (epoch + 1))  # 训练误差
-            self.train_writer.add_text('top1', 'train accuracy top1 %.2f%%' % self.train_top1.avg,
-                                       ii * (epoch + 1))  # top1准确率文本
-            self.train_writer.add_scalars('accuracy', {'top1': self.train_top1.avg,
-                                                       'top5': self.train_top5.avg,
-                                                       'loss': self.train_losses.avg}, ii * (epoch + 1))
+        if ii % self.opt.print_freq:
+            if self.train_writer:
+                grid = make_grid((input.data.cpu() * 0.225 + 0.45).clamp(min=0, max=1))
+                self.train_writer.add_image('train_images', grid, ii * (epoch + 1))  # 训练图片
+                self.train_writer.add_scalar('loss', self.train_losses.avg, ii * (epoch + 1))  # 训练误差
+                self.train_writer.add_text('top1', 'train accuracy top1 %.2f%%' % self.train_top1.avg,
+                                           ii * (epoch + 1))  # top1准确率文本
+                self.train_writer.add_scalars('accuracy', {'top1': self.train_top1.avg,
+                                                           'top5': self.train_top5.avg,
+                                                           'loss': self.train_losses.avg}, ii * (epoch + 1))
 
     def train(self):
         previous_loss = 1e10  # 上次学习的loss
@@ -204,8 +205,8 @@ class Classifier:
             # 按稀疏度排序为主排序键，然后按top1、top5、epoch排序
             perf_scores_history.sort(key=operator.attrgetter('sparsity', 'top1', 'top5', 'epoch'), reverse=True)
             for score in perf_scores_history[:1]:
-                msglogger.info('==> Best [Top1: %.3f   Top5: %.3f   Sparsity: %.2f on epoch: %d]',
-                               score.top1, score.top5, score.sparsity, score.epoch)
+                msglogger.info('==> Best [Top1: %.3f   Top5: %.3f   Sparsity: %.2f on epoch: %d LR: %d]',
+                               score.top1, score.top5, score.sparsity, score.epoch+1, lr)
 
             is_best = epoch == perf_scores_history[0].epoch  # 当前epoch 和最佳epoch 一样
             self.best_precision = max(perf_scores_history[0].top1, self.best_precision)  # 最大top1 准确率

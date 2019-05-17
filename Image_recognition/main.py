@@ -138,6 +138,7 @@ def train(**kwargs):
         best_precision = checkpoint["best_precision"]
         model.load_state_dict(checkpoint["state_dict"])
         optimizer = checkpoint['optimizer']
+        lr = optimizer.param_groups[0]['lr']
     model.to(opt.device)  # 加载模型到 GPU
 
     if opt.compress:
@@ -160,7 +161,7 @@ def train(**kwargs):
         total_samples = len(train_dataloader.sampler)
         steps_per_epoch = math.ceil(total_samples / opt.batch_size)
         train_progressor = ProgressBar(mode="Train  ", epoch=epoch, total_epoch=opt.max_epoch,
-                                       model_name=opt.model,
+                                       model_name=opt.model, lr=lr,
                                        total=len(train_dataloader))
         for ii, (data, labels, img_path) in enumerate(train_dataloader):
 
@@ -203,29 +204,30 @@ def train(**kwargs):
             train_progressor.current_top1 = train_top1.avg
             train_progressor.current_top5 = train_top5.avg
             train_progressor()  # 打印进度
-            if train_writer:
-                train_writer.add_scalar('loss', train_losses.avg, ii * (epoch + 1))  # 训练误差
-                train_writer.add_text('top1', 'train accuracy top1 %s' % train_top1.avg,
-                                      ii * (epoch + 1))  # top1准确率文本
-                train_writer.add_scalars('accuracy', {'top1': train_top1.avg,
-                                                      'top5': train_top5.avg,
-                                                      'loss': train_losses.avg}, ii * (epoch + 1))
+            if ii % opt.print_freq:
+                if train_writer:
+                    train_writer.add_scalar('loss', train_losses.avg, ii * (epoch + 1))  # 训练误差
+                    train_writer.add_text('top1', 'train accuracy top1 %s' % train_top1.avg,
+                                          ii * (epoch + 1))  # top1准确率文本
+                    train_writer.add_scalars('accuracy', {'top1': train_top1.avg,
+                                                          'top5': train_top5.avg,
+                                                          'loss': train_losses.avg}, ii * (epoch + 1))
         # train_progressor.done()  # 保存训练结果为txt
         # validate and visualize
         print('')
         if opt.pruning:
             distiller.log_weights_sparsity(model, epoch, loggers=[pylogger])  # 打印模型修剪结果
             compression_scheduler.on_epoch_end(epoch, optimizer)  # epoch 结束修剪
-        val_loss, val_top1, val_top5 = val(model, criterion, val_dataloader, epoch, value_writer)  # 校验模型
+        val_loss, val_top1, val_top5 = val(model, criterion, val_dataloader, epoch, value_writer,lr)  # 校验模型
         sparsity = distiller.model_sparsity(model)
         perf_scores_history.append(distiller.MutableNamedTuple({'sparsity': sparsity, 'top1': val_top1,
-                                                                'top5': val_top5, 'epoch': epoch}))
+                                                                'top5': val_top5, 'epoch': epoch + 1, 'lr': lr}, ))
         # 保持绩效分数历史记录从最好到最差的排序
         # 按稀疏度排序为主排序键，然后按top1、top5、epoch排序
         perf_scores_history.sort(key=operator.attrgetter('sparsity', 'top1', 'top5', 'epoch'), reverse=True)
         for score in perf_scores_history[:1]:
-            msglogger.info('==> Best [Top1: %.3f   Top5: %.3f   Sparsity: %.2f on epoch: %d]',
-                           score.top1, score.top5, score.sparsity, score.epoch)
+            msglogger.info('==> Best [Top1: %.3f   Top5: %.3f   Sparsity: %.2f on epoch: %d lr: %d]',
+                           score.top1, score.top5, score.sparsity, score.epoch, lr)
 
         is_best = epoch == perf_scores_history[0].epoch  # 当前epoch 和最佳epoch 一样
         best_precision = max(perf_scores_history[0].top1, best_precision)  # 最大top1 准确率

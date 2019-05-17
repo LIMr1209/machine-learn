@@ -6,7 +6,7 @@ class ProgressBar(object):
     DEFAULT = "Progress: %(bar)s %(percent)3d%%"
 
     def __init__(self, mode, epoch=None, total_epoch=None, current_loss=None, current_top1=None, current_top5=None,
-                 model_name=None,
+                 model_name=None, lr=None,
                  total=None, current=None, width=50, symbol=">", output=sys.stderr):
         assert len(symbol) == 1
 
@@ -17,6 +17,7 @@ class ProgressBar(object):
         self.width = width
         self.current = current
         self.epoch = epoch
+        self.lr = lr
         self.total_epoch = total_epoch
         self.current_loss = current_loss
         self.current_top1 = current_top1
@@ -37,10 +38,11 @@ class ProgressBar(object):
             "current_loss": self.current_loss,
             "current_top1": self.current_top1,
             'current_top5': self.current_top5,
+            'current_lr': self.lr,
             "epoch": self.epoch + 1,
             "epochs": self.total_epoch
         }
-        message = "\033[1;32;40m%(mode)s Epoch:  %(epoch)d/%(epochs)d %(bar)s\033[0m  [Current: Loss %(current_loss)f Top1: %(current_top1)f Top5: %(current_top5)f]  %(current)d/%(total)d \033[1;32;40m[ %(percent)3d%% ]\033[0m" % args
+        message = "\033[1;32;40m%(mode)s Epoch:  %(epoch)d/%(epochs)d %(bar)s\033[0m  [Current: Loss %(current_loss)f Top1: %(current_top1)f Top5: %(current_top5)f lr: %(current_lr)f]  %(current)d/%(total)d \033[1;32;40m[ %(percent)3d%% ]\033[0m" % args
         self.write_message = "%(mode)s Epoch:  %(epoch)d/%(epochs)d %(bar)s  [Current: Loss %(current_loss)f Top1: %(current_top1)f ]  %(current)d/%(total)d [ %(percent)3d%% ]" % args
         print("\r" + message, file=self.output, end="")
 
