@@ -193,7 +193,7 @@ def train(**kwargs):
             if opt.pruning:
                 compression_scheduler.on_minibatch_end(epoch, ii, steps_per_epoch, optimizer)  # batch 结束修剪
 
-            precision1_train, precision5_train = accuracy(score, target, topk=(1, 2))  # top1 和 top5 的准确率
+            precision1_train, precision5_train = accuracy(score, target, topk=(1, 5))  # top1 和 top5 的准确率
 
             # writer.add_graph(model, input)
             # precision1_train, precision2_train = accuracy(score[0], target, topk=(1, 2))  # Inception3网络
