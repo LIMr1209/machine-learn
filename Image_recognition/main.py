@@ -98,12 +98,12 @@ def recognition(**kwargs):
 
 
 def train(**kwargs):
+    opt._parse(kwargs)
     train_writer = None
     value_writer = None
     if opt.vis:
         train_writer = SummaryWriter(log_dir='./runs/train_' + datetime.now().strftime('%y%m%d-%H-%M-%S'))
         value_writer = SummaryWriter(log_dir='./runs/val_' + datetime.now().strftime('%y%m%d-%H-%M-%S'))
-    opt._parse(kwargs)
     previous_loss = 1e10  # 上次学习的loss
     best_precision = 0  # 最好的精确度
     start_epoch = 0
@@ -193,7 +193,7 @@ def train(**kwargs):
             if opt.pruning:
                 compression_scheduler.on_minibatch_end(epoch, ii, steps_per_epoch, optimizer)  # batch 结束修剪
 
-            precision1_train, precision5_train = accuracy(score, target, topk=(1, 5))  # top1 和 top5 的准确率
+            precision1_train, precision5_train = accuracy(score, target, topk=(1, 2))  # top1 和 top5 的准确率
 
             # writer.add_graph(model, input)
             # precision1_train, precision2_train = accuracy(score[0], target, topk=(1, 2))  # Inception3网络
@@ -214,20 +214,20 @@ def train(**kwargs):
                                                           'loss': train_losses.avg}, ii * (epoch + 1))
         # train_progressor.done()  # 保存训练结果为txt
         # validate and visualize
-        print('')
         if opt.pruning:
             distiller.log_weights_sparsity(model, epoch, loggers=[pylogger])  # 打印模型修剪结果
             compression_scheduler.on_epoch_end(epoch, optimizer)  # epoch 结束修剪
-        val_loss, val_top1, val_top5 = val(model, criterion, val_dataloader, epoch, value_writer,lr)  # 校验模型
+        val_loss, val_top1, val_top5 = val(model, criterion, val_dataloader, epoch, value_writer, lr)  # 校验模型
         sparsity = distiller.model_sparsity(model)
         perf_scores_history.append(distiller.MutableNamedTuple({'sparsity': sparsity, 'top1': val_top1,
-                                                                'top5': val_top5, 'epoch': epoch + 1, 'lr': lr}, ))
+                                                                'top5': val_top5, 'epoch': epoch + 1, 'lr': lr,
+                                                                'loss': val_loss}, ))
         # 保持绩效分数历史记录从最好到最差的排序
         # 按稀疏度排序为主排序键，然后按top1、top5、epoch排序
         perf_scores_history.sort(key=operator.attrgetter('sparsity', 'top1', 'top5', 'epoch'), reverse=True)
         for score in perf_scores_history[:1]:
-            msglogger.info('==> Best [Top1: %.3f   Top5: %.3f   Sparsity: %.2f on epoch: %d lr: %f]',
-                           score.top1, score.top5, score.sparsity, score.epoch, lr)
+            msglogger.info('==> Best [Top1: %.3f   Top5: %.3f   Sparsity: %.2f on epoch: %d   Lr: %f   Loss: %f]',
+                           score.top1, score.top5, score.sparsity, score.epoch, lr, score.loss)
 
         is_best = epoch == perf_scores_history[0].epoch  # 当前epoch 和最佳epoch 一样
         best_precision = max(perf_scores_history[0].top1, best_precision)  # 最大top1 准确率

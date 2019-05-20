@@ -28,7 +28,7 @@ def val(model, criterion, dataloader, epoch=None, val_writer=None, lr=None, msgl
             labels = labels.to(opt.device)
             score = model(input)
             loss = criterion(score, labels)
-            precision1, precision5 = accuracy(score, labels, topk=(1, 5))  # top1 和 top2 的准确率
+            precision1, precision5 = accuracy(score, labels, topk=(1, 5))  # top1 和 top5 的准确率
             val_losses.update(loss.item(), input.size(0))
             val_top1.update(precision1[0].item(), input.size(0))
             val_top5.update(precision5[0].item(), input.size(0))
@@ -37,6 +37,7 @@ def val(model, criterion, dataloader, epoch=None, val_writer=None, lr=None, msgl
                 val_progressor.current_loss = val_losses.avg
                 val_progressor.current_top1 = val_top1.avg
                 val_progressor.current_top5 = val_top5.avg
+                val_progressor()
                 if ii % opt.print_freq:
                     if val_writer:
                         grid = make_grid((input.data.cpu() * 0.225 + 0.45).clamp(min=0, max=1))
@@ -48,12 +49,9 @@ def val(model, criterion, dataloader, epoch=None, val_writer=None, lr=None, msgl
                                                             'top5': val_top5.avg,
                                                             'loss': val_losses.avg}, ii * (epoch + 1))
 
-                val_progressor()
         if msglogger:
             msglogger.info('==> Top1: %.3f    Top5: %.3f    Loss: %.3f\n',
                            val_top1.avg, val_top5.avg, val_losses.avg)
-        if val_progressor:
-            print('')
         return [val_losses.avg, val_top1.avg, val_top5.avg]
 
 

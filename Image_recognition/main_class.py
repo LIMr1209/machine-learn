@@ -129,6 +129,59 @@ class Classifier:
                                                            'top5': self.train_top5.avg,
                                                            'loss': self.train_losses.avg}, ii * (epoch + 1))
 
+    def test(self):
+        self.load_model()
+        self.load_data()
+        self.model.eval()  # 把module设成测试模式，对Dropout和BatchNorm有影响
+        correct = 0
+        total = 0
+        msglogger.info('测试数据集大小', len(self.test_dataloader))
+        # 量化
+        self.quantize_model()
+        self.model.eval()  # 把module设成测试模式，对Dropout和BatchNorm有影响
+        err_img = [('img_path', 'result', 'label')]
+        for ii, (data, labels, img_path) in tqdm(enumerate(self.test_dataloader)):
+            input = data.to(self.opt.device)
+            labels = labels.to(self.opt.device)
+            score = self.model(input)
+            # probability = t.nn.functional.softmax(score, dim=1)[:, 1].detach().tolist()  # [:,i] 第i类的权重
+            # 将一个K维的任意实数向量压缩（映射）成另一个K维的实数向量，其中向量中的每个元素取值都介于（0，1）之间，并且压缩后的K个值相加等于1(
+            # 变成了概率分布)。在选用Softmax做多分类时，可以根据值的大小来进行多分类的任务，如取权重最大的一维
+            results = score.max(dim=1)[1].detach()  # max 返回每一行中最大值的那个元素，且返回其索引（返回最大元素在这一行的列索引） 返回最有可能的一类
+            # batch_results = [(labels_.item(), self.opt.cate_classes[label_]) for labels_, label_ in zip(labels, label)]
+            total += input.size(0)
+            correct += (results == labels).sum().item()
+            error_list = (results != labels).tolist()
+            err_img.extend(
+                [(img_path[i], self.opt.cate_classes[results[i]], self.opt.cate_classes[labels[i]]) for i, j in
+                 enumerate(error_list) if j == 1])  # 识别错误图片地址,识别标签,正确标签,添加到错误列表
+
+        msglogger.info('Test Accuracy of the model on the {} test images: {} %'.format(total, 100 * correct / total))
+        # 错误图片写入csv
+        write_err_img(err_img)
+        # 保存量化模型
+        self.save_quantize_model()
+
+    def recognition(self):
+        self.load_model()
+        self.model.eval()
+        img = image_loader(self.opt.url)
+        image = img.view(1, 3, self.opt.image_size, self.opt.image_size).to(self.opt.device)  # 转换image
+        outputs = self.model(image)
+        result = {}
+        for i in range(self.opt.num_classes):  # 计算各分类比重
+            result[self.opt.cate_classes[i]] = t.nn.functional.softmax(outputs, dim=1)[:, i].detach().tolist()[0]
+            result = sorted(result.items(), key=lambda x: x[1], reverse=True)
+        return result
+
+    def sensitivity(self):
+        self.load_data()
+        self.load_model()
+        sensitivities = np.arange(self.opt.sensitivity_range[0], self.opt.sensitivity_range[1],
+                                  self.opt.sensitivity_range[2])
+        return sensitivity_analysis(self.model, self.criterion, self.test_dataloader, self.opt, sensitivities,
+                                    msglogger)
+
     def train(self):
         previous_loss = 1e10  # 上次学习的loss
         lr = self.opt.lr
@@ -186,13 +239,9 @@ class Classifier:
                 train_progressor.current_loss = self.train_losses.avg
                 train_progressor.current_top1 = self.train_top1.avg
                 train_progressor.current_top5 = self.train_top5.avg
-
+                train_progressor()  # 打印进度
                 if (ii + 1) % self.opt.print_freq == 0:
                     self.visualization_train(input, ii, epoch)
-                train_progressor()  # 打印进度
-            # train_progressor.done()  # 保存训练结果为txt
-
-            print('')
             if self.opt.pruning:
                 distiller.log_weights_sparsity(self.model, epoch, loggers=[pylogger])  # 打印模型修剪结果
                 self.compression_scheduler.on_epoch_end(epoch, self.optimizer)  # epoch 结束修剪
@@ -200,13 +249,14 @@ class Classifier:
                                                self.value_writer)  # 校验模型
             sparsity = distiller.model_sparsity(self.model)
             perf_scores_history.append(distiller.MutableNamedTuple({'sparsity': sparsity, 'top1': val_top1,
-                                                                    'top5': val_top5, 'epoch': epoch}))
+                                                                    'top5': val_top5, 'epoch': epoch + 1, 'lr': lr,
+                                                                    'loss': val_loss}, ))
             # 保持绩效分数历史记录从最好到最差的排序
             # 按稀疏度排序为主排序键，然后按top1、top5、epoch排序
             perf_scores_history.sort(key=operator.attrgetter('sparsity', 'top1', 'top5', 'epoch'), reverse=True)
             for score in perf_scores_history[:1]:
-                msglogger.info('==> Best [Top1: %.3f   Top5: %.3f   Sparsity: %.2f on epoch: %d LR: %d]',
-                               score.top1, score.top5, score.sparsity, score.epoch+1, lr)
+                 msglogger.info('==> Best [Top1: %.3f   Top5: %.3f   Sparsity: %.2f on epoch: %d   Lr: %f   Loss: %f]',
+                           score.top1, score.top5, score.sparsity, score.epoch, lr, score.loss)
 
             is_best = epoch == perf_scores_history[0].epoch  # 当前epoch 和最佳epoch 一样
             self.best_precision = max(perf_scores_history[0].top1, self.best_precision)  # 最大top1 准确率
@@ -221,59 +271,6 @@ class Classifier:
                     param_group['lr'] = lr
 
             previous_loss = self.train_losses.val
-
-    def test(self):
-        self.load_model()
-        self.load_data()
-        self.model.eval()  # 把module设成测试模式，对Dropout和BatchNorm有影响
-        correct = 0
-        total = 0
-        msglogger.info('测试数据集大小', len(self.test_dataloader))
-        # 量化
-        self.quantize_model()
-        self.model.eval()  # 把module设成测试模式，对Dropout和BatchNorm有影响
-        err_img = [('img_path', 'result', 'label')]
-        for ii, (data, labels, img_path) in tqdm(enumerate(self.test_dataloader)):
-            input = data.to(self.opt.device)
-            labels = labels.to(self.opt.device)
-            score = self.model(input)
-            # probability = t.nn.functional.softmax(score, dim=1)[:, 1].detach().tolist()  # [:,i] 第i类的权重
-            # 将一个K维的任意实数向量压缩（映射）成另一个K维的实数向量，其中向量中的每个元素取值都介于（0，1）之间，并且压缩后的K个值相加等于1(
-            # 变成了概率分布)。在选用Softmax做多分类时，可以根据值的大小来进行多分类的任务，如取权重最大的一维
-            results = score.max(dim=1)[1].detach()  # max 返回每一行中最大值的那个元素，且返回其索引（返回最大元素在这一行的列索引） 返回最有可能的一类
-            # batch_results = [(labels_.item(), self.opt.cate_classes[label_]) for labels_, label_ in zip(labels, label)]
-            total += input.size(0)
-            correct += (results == labels).sum().item()
-            error_list = (results != labels).tolist()
-            err_img.extend(
-                [(img_path[i], self.opt.cate_classes[results[i]], self.opt.cate_classes[labels[i]]) for i, j in
-                 enumerate(error_list) if j == 1])  # 识别错误图片地址,识别标签,正确标签,添加到错误列表
-
-        msglogger.info('Test Accuracy of the model on the {} test images: {} %'.format(total, 100 * correct / total))
-        # 错误图片写入csv
-        write_err_img(err_img)
-        # 保存量化模型
-        self.save_quantize_model()
-
-    def recognition(self):
-        self.load_model()
-        self.model.eval()
-        img = image_loader(self.opt.url)
-        image = img.view(1, 3, self.opt.image_size, self.opt.image_size).to(self.opt.device)  # 转换image
-        outputs = self.model(image)
-        result = {}
-        for i in range(self.opt.num_classes):  # 计算各分类比重
-            result[self.opt.cate_classes[i]] = t.nn.functional.softmax(outputs, dim=1)[:, i].detach().tolist()[0]
-            result = sorted(result.items(), key=lambda x: x[1], reverse=True)
-        return result
-
-    def sensitivity(self):
-        self.load_data()
-        self.load_model()
-        sensitivities = np.arange(self.opt.sensitivity_range[0], self.opt.sensitivity_range[1],
-                                  self.opt.sensitivity_range[2])
-        return sensitivity_analysis(self.model, self.criterion, self.test_dataloader, self.opt, sensitivities,
-                                    msglogger)
 
 
 def train(**kwargs):
