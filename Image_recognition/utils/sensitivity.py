@@ -38,7 +38,7 @@ def val(model, criterion, dataloader, epoch=None, val_writer=None, lr=None, msgl
                 val_progressor.current_top1 = val_top1.avg
                 val_progressor.current_top5 = val_top5.avg
                 val_progressor()
-                if ii % opt.print_freq:
+                if ii % opt.print_freq == 0:
                     if val_writer:
                         grid = make_grid((input.data.cpu() * 0.225 + 0.45).clamp(min=0, max=1))
                         val_writer.add_image('val_images', grid, ii * (epoch + 1))  # 测试图片

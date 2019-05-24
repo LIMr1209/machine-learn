@@ -204,7 +204,7 @@ def train(**kwargs):
             train_progressor.current_top1 = train_top1.avg
             train_progressor.current_top5 = train_top5.avg
             train_progressor()  # 打印进度
-            if ii % opt.print_freq:
+            if ii % opt.print_freq == 0:
                 if train_writer:
                     train_writer.add_scalar('loss', train_losses.avg, ii * (epoch + 1))  # 训练误差
                     train_writer.add_text('top1', 'train accuracy top1 %s' % train_top1.avg,

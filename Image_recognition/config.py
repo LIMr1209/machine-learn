@@ -15,7 +15,7 @@ class DefaultConfig(object):
     use_gpu = True  # 是否使用GPU
     num_workers = 4  # 用于数据预处理的多处理工作器的数量
     print_freq = 100  # 数据可视化指数
-    vis = False  # 是否使用tensorboard可视化
+    vis = True  # 是否使用tensorboard可视化
 
     cate_classes = get_classes(data_root)['class2num']  # 图像分类标签列表
     num_classes = len(cate_classes)  # 图像分类个数

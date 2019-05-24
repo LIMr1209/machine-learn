@@ -5,7 +5,7 @@ cd $prodir
 echo '切换环境'
 source activate jiqi
 echo '启动可视化'
-python -m visdom.server &
+tensorboard --logdir=runs &
 echo '训练'
 python main.py train
 echo '测试'
