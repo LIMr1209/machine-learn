@@ -50,6 +50,7 @@ def accuracy(output, target, topk=(1,)):
         return res
 
 
+# log日志
 def config_pylogger(log_cfg_file, experiment_name, output_dir='logs'):
     """Configure the Python logger.
 

@@ -1,6 +1,5 @@
 #!/usr/bin/zsh
 
-# 加载python环境
 current_path=$(cd $(dirname $0);pwd)
 source activate jiqi
 
@@ -17,6 +16,7 @@ start)
     python main.py train
     echo '测试'
     python main.py test --load-path='checkpoints/ResNet152.pth.tar'
+    echo '迁移'
     python utils/model_dict.py
 
 ;;
