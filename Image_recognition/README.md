@@ -61,3 +61,15 @@ python main.py test --load-path='checkpoints/ResNet152.pth.tar'
 ```
 python main.py recognition --url='图片地址' --load-path='checkpoints/ResNet152.pth.tar'
 ```
+
+## 自动化
+
+开始训练
+```
+./deploy.sh start
+```
+
+停止训练
+```
+./deploy.sh stop
+```

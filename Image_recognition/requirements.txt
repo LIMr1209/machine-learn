@@ -4,6 +4,5 @@ torchnet==0.0.4
 ipdb==0.11
 fire==0.1.3
 torch==1.1.0
-tensorflow==
 distiller==0.4.0rc0
 tb-nightly==1.14.0a20190505

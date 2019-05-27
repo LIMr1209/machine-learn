@@ -4,7 +4,6 @@ import operator
 from datetime import datetime
 
 import distiller
-from distiller import apputils
 from distiller.data_loggers import *
 from config import opt
 import torch as t
@@ -20,6 +19,7 @@ import numpy as np
 import distiller.quantization as quantization
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.utils import make_grid
+from utils.utils import config_pylogger
 
 seed = 1000
 t.cuda.manual_seed(seed)  # 随机数种子,当使用随机数时,关闭进程后再次生成和上次得一样
@@ -293,5 +293,5 @@ if __name__ == '__main__':
 
     script_dir = os.path.dirname(__file__)
     module_path = os.path.abspath(os.path.join(script_dir, '..', '..'))
-    msglogger = apputils.config_pylogger(os.path.join(script_dir, 'logging.conf'), opt.name, opt.output_dir)
+    msglogger = config_pylogger(os.path.join(script_dir, 'logging.conf'), opt.name, opt.output_dir)
     fire.Fire()
