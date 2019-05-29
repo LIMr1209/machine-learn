@@ -3,7 +3,6 @@ import os
 import operator
 from datetime import datetime
 import distiller
-from distiller import apputils
 from distiller.data_loggers import *
 from config import opt
 import torch as t
@@ -11,7 +10,7 @@ import models
 from data.dataset import DatasetFromFilename
 from torch.utils.data import DataLoader
 from utils.image_loader import image_loader
-from utils.utils import AverageMeter, accuracy, write_err_img
+from utils.utils import AverageMeter, accuracy, write_err_img, config_pylogger
 from utils.sensitivity import sensitivity_analysis, val
 from utils.progress_bar import ProgressBar
 from tqdm import tqdm
@@ -314,5 +313,5 @@ if __name__ == '__main__':
 
     script_dir = os.path.dirname(__file__)
     module_path = os.path.abspath(os.path.join(script_dir, '..', '..'))
-    msglogger = apputils.config_pylogger(os.path.join(script_dir, 'logging.conf'), opt.name, opt.output_dir)
+    msglogger = config_pylogger(os.path.join(script_dir, 'logging.conf'), opt.name, opt.output_dir)
     fire.Fire()

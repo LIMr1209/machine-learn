@@ -11,7 +11,7 @@ import models
 from data.dataset import DatasetFromFilename
 from torch.utils.data import DataLoader
 from utils.image_loader import image_loader
-from utils.utils import AverageMeter, accuracy, write_err_img
+from utils.utils import AverageMeter, accuracy, write_err_img,config_pylogger
 from utils.sensitivity import sensitivity_analysis, val
 from utils.progress_bar import ProgressBar
 from tqdm import tqdm
@@ -19,7 +19,6 @@ import numpy as np
 import distiller.quantization as quantization
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.utils import make_grid
-from utils.utils import config_pylogger
 
 seed = 1000
 t.cuda.manual_seed(seed)  # 随机数种子,当使用随机数时,关闭进程后再次生成和上次得一样

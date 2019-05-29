@@ -2,6 +2,8 @@ from io import BytesIO
 from torchvision import transforms as T
 import requests
 from PIL import Image
+from PIL import ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True  # 图片文件允许截断
 from config import opt
 
 normalize = T.Normalize(mean=[0.485, 0.456, 0.406],
