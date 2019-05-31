@@ -36,7 +36,7 @@ def test(**kwargs):
         model.to(opt.device)
         model.eval()  # 把module设成测试模式，对Dropout和BatchNorm有影响
         # data
-        test_data = DatasetFromFilename(opt.data_root, flag='train')  # 测试集
+        test_data = DatasetFromFilename(opt.data_root, flag='test')  # 测试集
         test_dataloader = DataLoader(test_data, batch_size=opt.batch_size, shuffle=False, num_workers=opt.num_workers)
         correct = 0
         total = 0
@@ -123,7 +123,7 @@ def train(**kwargs):
     # step3: configure model
     model = getattr(models, opt.model)()  # 获得网络结构
     compression_scheduler = distiller.CompressionScheduler(model)
-    optimizer = model.get_optimizer(opt.lr, opt.weight_decay)  # 优化器
+    optimizer = model.get_optimizer(lr, opt.weight_decay)  # 优化器
     if opt.load_model_path:
         # # 把所有的张量加载到CPU中
         # t.load(opt.load_model_path, map_location=lambda storage, loc: storage)
@@ -132,12 +132,12 @@ def train(**kwargs):
         # # 把张量从GPU 1 移动到 GPU 0
         # t.load(opt.load_model_path, map_location={'cuda:1': 'cuda:0'})
         checkpoint = t.load(opt.load_model_path)
-        start_epoch = checkpoint["epoch"]
+        # start_epoch = checkpoint["epoch"]
         # compression_scheduler.load_state_dict(checkpoint['compression_scheduler'], False)
-        best_precision = checkpoint["best_precision"]
+        # best_precision = checkpoint["best_precision"]
         model.load_state_dict(checkpoint["state_dict"])
-        optimizer = checkpoint['optimizer']
-        lr = optimizer.param_groups[0]['lr']
+        # optimizer = checkpoint['optimizer']
+        # lr = optimizer.param_groups[0]['lr']
     model.to(opt.device)  # 加载模型到 GPU
 
     if opt.compress:
@@ -150,7 +150,7 @@ def train(**kwargs):
         # step4: data_image
         train_data = DatasetFromFilename(opt.data_root, flag='train')  # 训练集
         val_data = DatasetFromFilename(opt.data_root, flag='valid')  # 验证集
-        train_dataloader = DataLoader(train_data, opt.batch_size, shuffle=True, num_workers=opt.num_workers)  # 训练集加载器
+        train_dataloader = DataLoader(train_data, opt.batch_size, shuffle=False, num_workers=opt.num_workers)  # 训练集加载器
         val_dataloader = DataLoader(val_data, opt.batch_size, shuffle=False, num_workers=opt.num_workers)  # 验证集加载器
         if opt.pruning:
             compression_scheduler.on_epoch_begin(epoch)  # epoch 开始修剪
@@ -228,8 +228,8 @@ def train(**kwargs):
             msglogger.info('==> Best [Top1: %.3f   Top5: %.3f   Sparsity: %.2f on epoch: %d   Lr: %f   Loss: %f]',
                            score.top1, score.top5, score.sparsity, score.epoch, lr, score.loss)
 
-        is_best = epoch == perf_scores_history[0].epoch  # 当前epoch 和最佳epoch 一样
         best_precision = max(perf_scores_history[0].top1, best_precision)  # 最大top1 准确率
+        is_best = epoch+1 == perf_scores_history[0].epoch  # 当前epoch 和最佳epoch 一样
         if is_best:
             model.save({
                 "epoch": epoch + 1,

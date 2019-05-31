@@ -16,19 +16,17 @@ class DatasetFromFilename(data.Dataset):
         """
         splitter = ImageFolderSplitter(root)
         self.flag = flag
+        self.imgs, self.labels = splitter.getTrainingDataset()
+        num = len(self.imgs)
         if self.flag == 'test':
             self.imgs, self.labels = splitter.getValidationDataset()  # 测试数据
         elif self.flag == 'train':
-            self.imgs, self.labels = splitter.getTrainingDataset()
-            num = len(self.imgs)
+            self.imgs = self.imgs[int(0.2 * num):]
+            self.labels = self.labels[int(0.2 * num):]
             # 训练数据
-            self.imgs = self.imgs[:int(0.7 * num)]
-            self.labels = self.labels[:int(0.7 * num)]
         elif self.flag == 'valid':
-            self.imgs, self.labels = splitter.getTrainingDataset()
-            num = len(self.imgs)
-            self.imgs = self.imgs[int(0.7 * num):]
-            self.labels = self.labels[int(0.7 * num):]
+            self.imgs = self.imgs[:int(0.2 * num)]
+            self.labels = self.labels[:int(0.2 * num)]
 
         if transforms is None:  # 转化器 图片转tensor
             # 将tensor正则化   mean 均值 std 方差 Normalized_image=(image-mean)/std
