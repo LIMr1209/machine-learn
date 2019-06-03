@@ -23,7 +23,7 @@ def val(model, criterion, dataloader, epoch=None, val_writer=None, lr=None, msgl
             val_progressor = ProgressBar(mode="Val  ", epoch=epoch, total_epoch=opt.max_epoch, model_name=opt.model,
                                          lr=lr,
                                          total=len(dataloader))
-        for ii, (data, labels, img_path) in enumerate(dataloader):
+        for ii, (data, labels, img_path,tag) in enumerate(dataloader):
             input = data.to(opt.device)
             labels = labels.to(opt.device)
             score = model(input)

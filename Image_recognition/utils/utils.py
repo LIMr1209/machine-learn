@@ -52,14 +52,6 @@ def accuracy(output, target, topk=(1,)):
 
 # log日志
 def config_pylogger(log_cfg_file, experiment_name, output_dir='logs'):
-    """Configure the Python logger.
-
-    For each execution of the application, we'd like to create a unique log directory.
-    By default this directory is named using the date and time of day, so that directories
-    can be sorted by recency.  You can also name your experiments and prefix the log
-    directory with this name.  This can be useful when accessing experiment data from
-    TensorBoard, for example.
-    """
     timestr = time.strftime("%Y.%m.%d-%H%M%S")
     exp_full_name = timestr if experiment_name is None else experiment_name + '___' + timestr
     logdir = os.path.join(output_dir, exp_full_name)

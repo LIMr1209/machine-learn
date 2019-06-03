@@ -21,7 +21,7 @@ from torch.utils.tensorboard import SummaryWriter
 from torchvision.utils import make_grid
 
 seed = 1000
-t.cuda.manual_seed(seed)  # 随机数种子,当使用随机数时,关闭进程后再次生成和上次得一样
+# t.cuda.manual_seed(seed)  # 随机数种子,当使用随机数时,关闭进程后再次生成和上次得一样
 
 
 def test(**kwargs):
@@ -36,8 +36,8 @@ def test(**kwargs):
         model.to(opt.device)
         model.eval()  # 把module设成测试模式，对Dropout和BatchNorm有影响
         # data
-        test_data = DatasetFromFilename(opt.data_root, flag='test')  # 测试集
-        test_dataloader = DataLoader(test_data, batch_size=opt.batch_size, shuffle=False, num_workers=opt.num_workers)
+        test_data = DatasetFromFilename(opt.data_root, flag='train')  # 测试集
+        test_dataloader = DataLoader(test_data, batch_size=opt.batch_size, shuffle=True, num_workers=opt.num_workers)
         correct = 0
         total = 0
         msglogger.info('测试数据集大小%s', len(test_dataloader))
@@ -49,7 +49,7 @@ def test(**kwargs):
             model.to(opt.device)
         model.eval()  # 把module设成测试模式，对Dropout和BatchNorm有影响
         err_img = [('img_path', 'result', 'label')]
-        for ii, (data, labels, img_path) in tqdm(enumerate(test_dataloader)):
+        for ii, (data, labels, img_path,tag) in tqdm(enumerate(test_dataloader)):
             input = data.to(opt.device)
             labels = labels.to(opt.device)
             score = model(input)
@@ -78,7 +78,7 @@ def test(**kwargs):
 
 
 def recognition(**kwargs):
-    with t.no_grad():  # 用来标志计算要被计算图隔离出去
+    with t.no_grad():  # 用来标志计算要被计算图隔离出去,取消梯度
         opt._parse(kwargs)
         image = image_loader(opt.url)
         model = getattr(models, opt.model)()
@@ -149,9 +149,9 @@ def train(**kwargs):
         model.train()
         # step4: data_image
         train_data = DatasetFromFilename(opt.data_root, flag='train')  # 训练集
-        val_data = DatasetFromFilename(opt.data_root, flag='valid')  # 验证集
-        train_dataloader = DataLoader(train_data, opt.batch_size, shuffle=False, num_workers=opt.num_workers)  # 训练集加载器
-        val_dataloader = DataLoader(val_data, opt.batch_size, shuffle=False, num_workers=opt.num_workers)  # 验证集加载器
+        val_data = DatasetFromFilename(opt.data_root, flag='va')  # 验证集
+        train_dataloader = DataLoader(train_data, opt.batch_size, shuffle=True, num_workers=opt.num_workers)  # 训练集加载器
+        val_dataloader = DataLoader(val_data, opt.batch_size, shuffle=True, num_workers=opt.num_workers)  # 验证集加载器
         if opt.pruning:
             compression_scheduler.on_epoch_begin(epoch)  # epoch 开始修剪
         train_losses.reset()  # 重置仪表
@@ -162,7 +162,7 @@ def train(**kwargs):
         train_progressor = ProgressBar(mode="Train  ", epoch=epoch, total_epoch=opt.max_epoch,
                                        model_name=opt.model, lr=lr,
                                        total=len(train_dataloader))
-        for ii, (data, labels, img_path) in enumerate(train_dataloader):
+        for ii, (data, labels, img_path,tag) in enumerate(train_dataloader):
 
             if opt.pruning:
                 compression_scheduler.on_minibatch_begin(epoch, ii, steps_per_epoch, optimizer)  # batch 开始修剪
