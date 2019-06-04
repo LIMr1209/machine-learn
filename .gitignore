@@ -3,8 +3,11 @@ __pycache__/
 *.txt
 !requirements.txt
 *.tar
+*.pt
 *.tar.gZ
+*.proto
 *.jpg
+*.jpeg
 !.gitignore
 *.pth
 *.csv
@@ -17,3 +20,5 @@ nohup.out
 core
 runs/
 mnist/
+experiment/
+
