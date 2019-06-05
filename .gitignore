@@ -13,12 +13,9 @@ __pycache__/
 *.csv
 *.png
 *.log
-latest_log_file
-latest_log_dir
 logs/
 nohup.out
 core
 runs/
 mnist/
 experiment/
-
