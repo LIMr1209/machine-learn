@@ -42,8 +42,7 @@ class MODEL(nn.Module):
         # wn = lambda x: x
         wn = lambda x: torch.nn.utils.weight_norm(x)
 
-        self.rgb_mean = torch.autograd.Variable(torch.FloatTensor(
-            [args.r_mean, args.g_mean, args.b_mean])).view([1, 3, 1, 1])
+        self.rgb_mean = torch.FloatTensor([args.r_mean, args.g_mean, args.b_mean]).view([1, 3, 1, 1])
 
         # define head module
         head = []

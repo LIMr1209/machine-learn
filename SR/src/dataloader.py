@@ -19,6 +19,7 @@ from torch.utils.data._utils.worker import ManagerWatchdog
 
 from torch._six import queue
 
+
 def _ms_loop(dataset, index_queue, data_queue, done_event, collate_fn, scale, seed, init_fn, worker_id):
     try:
         collate._use_shared_memory = True
@@ -64,6 +65,7 @@ def _ms_loop(dataset, index_queue, data_queue, done_event, collate_fn, scale, se
 
     except KeyboardInterrupt:
         pass
+
 
 class _MSDataLoaderIter(_DataLoaderIter):
 
@@ -155,4 +157,3 @@ class MSDataLoader(DataLoader):
 
     def __iter__(self):
         return _MSDataLoaderIter(self)
-

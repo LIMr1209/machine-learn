@@ -1,5 +1,7 @@
-import torch
 import sys
+import os
+sys.path.insert(0, os.path.join(os.path.abspath(os.path.dirname("__file__"))))
+import torch
 import utility
 import data
 import model
@@ -9,7 +11,6 @@ from trainer import Trainer
 
 torch.manual_seed(args.seed)
 checkpoint = utility.checkpoint(args)
-sys.path.insert(0, '/home/tian/Desktop/ai/EDSR-PyTorch/src')
 
 
 def main():

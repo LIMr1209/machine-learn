@@ -9,6 +9,7 @@ import cv2
 
 from tqdm import tqdm
 
+
 class VideoTester():
     def __init__(self, args, my_model, ckp):
         self.args = args
@@ -64,9 +65,9 @@ class VideoTester():
 
     def prepare(self, *args):
         device = torch.device('cpu' if self.args.cpu else 'cuda')
+
         def _prepare(tensor):
             if self.args.precision == 'half': tensor = tensor.half()
             return tensor.to(device)
 
         return [_prepare(a) for a in args]
-

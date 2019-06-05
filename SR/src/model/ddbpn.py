@@ -10,6 +10,7 @@ import torch.nn as nn
 def make_model(args, parent=False):
     return DDBPN(args)
 
+
 def projection_conv(in_channels, out_channels, scale, up=True):
     kernel_size, stride, padding = {
         2: (6, 2, 2),
@@ -25,6 +26,7 @@ def projection_conv(in_channels, out_channels, scale, up=True):
         in_channels, out_channels, kernel_size,
         stride=stride, padding=padding
     )
+
 
 class DenseProjection(nn.Module):
     def __init__(self, in_channels, nr, scale, up=True, bottleneck=True):
@@ -65,6 +67,7 @@ class DenseProjection(nn.Module):
 
         return out
 
+
 class DDBPN(nn.Module):
     def __init__(self, args):
         super(DDBPN, self).__init__()
@@ -94,7 +97,7 @@ class DDBPN(nn.Module):
             )
             if i != 0:
                 channels += nr
-        
+
         channels = nr
         for i in range(self.depth - 1):
             self.downmodules.append(
@@ -103,7 +106,7 @@ class DDBPN(nn.Module):
             channels += nr
 
         reconstruction = [
-            nn.Conv2d(self.depth * nr, args.n_colors, 3, padding=1) 
+            nn.Conv2d(self.depth * nr, args.n_colors, 3, padding=1)
         ]
         self.reconstruction = nn.Sequential(*reconstruction)
 
@@ -122,10 +125,9 @@ class DDBPN(nn.Module):
                 l = torch.cat(l_list, dim=1)
             h_list.append(self.upmodules[i](l))
             l_list.append(self.downmodules[i](torch.cat(h_list, dim=1)))
-        
+
         h_list.append(self.upmodules[-1](torch.cat(l_list, dim=1)))
         out = self.reconstruction(torch.cat(h_list, dim=1))
         out = self.add_mean(out)
 
         return out
-

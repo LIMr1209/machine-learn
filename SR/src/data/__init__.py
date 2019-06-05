@@ -2,6 +2,7 @@ from importlib import import_module
 from dataloader import MSDataLoader
 from torch.utils.data import ConcatDataset
 
+
 # This is a simple wrapper function for ConcatDataset
 class MyConcatDataset(ConcatDataset):
     def __init__(self, datasets):
@@ -11,6 +12,7 @@ class MyConcatDataset(ConcatDataset):
     def set_scale(self, idx_scale):
         for d in self.datasets:
             if hasattr(d, 'set_scale'): d.set_scale(idx_scale)
+
 
 class Data:
     def __init__(self, args):
@@ -47,4 +49,3 @@ class Data:
                 shuffle=False,
                 pin_memory=not args.cpu
             ))
-

@@ -8,6 +8,7 @@ import imageio
 import torch
 import torch.utils.data as data
 
+
 class Demo(data.Dataset):
     def __init__(self, args, name='Demo', train=False, benchmark=False):
         self.args = args
@@ -36,4 +37,3 @@ class Demo(data.Dataset):
 
     def set_scale(self, idx_scale):
         self.idx_scale = idx_scale
-

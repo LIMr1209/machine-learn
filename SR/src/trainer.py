@@ -8,7 +8,8 @@ import torch
 import torch.nn.utils as utils
 from tqdm import tqdm
 
-class Trainer():
+
+class Trainer:
     def __init__(self, args, loader, my_model, my_loss, ckp):
         self.args = args
         self.scale = args.scale
@@ -128,6 +129,7 @@ class Trainer():
 
     def prepare(self, *args):
         device = torch.device('cpu' if self.args.cpu else 'cuda')
+
         def _prepare(tensor):
             if self.args.precision == 'half': tensor = tensor.half()
             return tensor.to(device)
@@ -141,4 +143,3 @@ class Trainer():
         else:
             epoch = self.optimizer.get_last_epoch() + 1
             return epoch >= self.args.epochs
-

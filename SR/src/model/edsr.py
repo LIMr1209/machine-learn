@@ -11,8 +11,10 @@ url = {
     'r32f256x4': 'https://cv.snu.ac.kr/research/EDSR/models/edsr_x4-4f62e9ef.pt'
 }
 
+
 def make_model(args, parent=False):
     return EDSR(args)
+
 
 class EDSR(nn.Module):
     def __init__(self, args, conv=common.default_conv):
@@ -20,7 +22,7 @@ class EDSR(nn.Module):
 
         n_resblocks = args.n_resblocks
         n_feats = args.n_feats
-        kernel_size = 3 
+        kernel_size = 3
         scale = args.scale[0]
         act = nn.ReLU(True)
         self.url = url['r{}f{}x{}'.format(n_resblocks, n_feats, scale)]
@@ -58,7 +60,7 @@ class EDSR(nn.Module):
         x = self.tail(res)
         x = self.add_mean(x)
 
-        return x 
+        return x
 
     def load_state_dict(self, state_dict, strict=True):
         own_state = self.state_dict()
@@ -78,4 +80,3 @@ class EDSR(nn.Module):
                 if name.find('tail') == -1:
                     raise KeyError('unexpected key "{}" in state_dict'
                                    .format(name))
-

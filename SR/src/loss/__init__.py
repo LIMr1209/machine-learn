@@ -2,6 +2,7 @@ import os
 from importlib import import_module
 
 import matplotlib
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
@@ -10,6 +11,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+
 
 class Loss(nn.modules.loss._Loss):
     def __init__(self, args, ckp):
@@ -131,13 +133,12 @@ class Loss(nn.modules.loss._Loss):
             kwargs = {'map_location': lambda storage, loc: storage}
         else:
             kwargs = {}
-
-        self.load_state_dict(torch.load(
-            os.path.join(apath, 'loss.pt'),
+        loss_dict = torch.load(
+            os.path.join(apath, 'loss.pt'),  # 加载loss.pt
             **kwargs
-        ))
-        self.log = torch.load(os.path.join(apath, 'loss_log.pt'))
+        )
+        self.load_state_dict(loss_dict)
+        self.log = torch.load(os.path.join(apath, 'loss_log.pt')) # 每个 epoch loss 的值
         for l in self.get_loss_module():
             if hasattr(l, 'scheduler'):
                 for _ in range(len(self.log)): l.scheduler.step()
-

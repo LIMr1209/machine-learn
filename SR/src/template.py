@@ -50,4 +50,3 @@ def set_template(args):
         args.n_feats = 64
         args.patch_size = 41
         args.lr = 1e-1
-

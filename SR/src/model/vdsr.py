@@ -7,8 +7,10 @@ url = {
     'r20f64': ''
 }
 
+
 def make_model(args, parent=False):
     return VDSR(args)
+
 
 class VDSR(nn.Module):
     def __init__(self, args, conv=common.default_conv):
@@ -16,7 +18,7 @@ class VDSR(nn.Module):
 
         n_resblocks = args.n_resblocks
         n_feats = args.n_feats
-        kernel_size = 3 
+        kernel_size = 3
         self.url = url['r{}f{}'.format(n_resblocks, n_feats)]
         self.sub_mean = common.MeanShift(args.rgb_range)
         self.add_mean = common.MeanShift(args.rgb_range, sign=1)
@@ -42,5 +44,4 @@ class VDSR(nn.Module):
         res += x
         x = self.add_mean(res)
 
-        return x 
-
+        return x

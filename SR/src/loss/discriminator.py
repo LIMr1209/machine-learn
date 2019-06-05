@@ -2,10 +2,12 @@ from model import common
 
 import torch.nn as nn
 
+
 class Discriminator(nn.Module):
     '''
         output is not normalized
     '''
+
     def __init__(self, args):
         super(Discriminator, self).__init__()
 
@@ -37,9 +39,9 @@ class Discriminator(nn.Module):
                 stride = 2
             m_features.append(_block(in_channels, out_channels, stride=stride))
 
-        patch_size = args.patch_size // (2**((depth + 1) // 2))
+        patch_size = args.patch_size // (2 ** ((depth + 1) // 2))
         m_classifier = [
-            nn.Linear(out_channels * patch_size**2, 1024),
+            nn.Linear(out_channels * patch_size ** 2, 1024),
             nn.LeakyReLU(negative_slope=0.2, inplace=True),
             nn.Linear(1024, 1)
         ]
@@ -52,4 +54,3 @@ class Discriminator(nn.Module):
         output = self.classifier(features.view(features.size(0), -1))
 
         return output
-

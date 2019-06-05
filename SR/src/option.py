@@ -87,7 +87,7 @@ parser.add_argument('--reset', action='store_true',
                     help='reset the training')  # 重新设置培训
 parser.add_argument('--test_every', type=int, default=1000,
                     help='do test per every N batches')  # 每N批测试一次
-parser.add_argument('--epochs', type=int, default=6,
+parser.add_argument('--epochs', type=int, default=7,
                     help='number of epochs to train')  # 要培训的时段数
 parser.add_argument('--batch_size', type=int, default=16,
                     help='input batch size for training')  # 输入培训批量
@@ -102,11 +102,11 @@ parser.add_argument('--gan_k', type=int, default=1,
 
 # Optimization specifications # 优化器规格
 parser.add_argument('--lr', type=float, default=1e-4,
-                    help='learning rate')
+                    help='learning rate')  # 学习速率
 parser.add_argument('--decay', type=str, default='200',
-                    help='learning rate decay type')
+                    help='learning rate decay type')  # 学习速率衰减类型 当epoch 等于200时 lr 除以 gamma
 parser.add_argument('--gamma', type=float, default=0.5,
-                    help='learning rate decay factor for step decay')
+                    help='learning rate decay factor for step decay') # 阶跃衰减的学习速率衰减因子
 parser.add_argument('--optimizer', default='ADAM',
                     choices=('SGD', 'ADAM', 'RMSprop'),
                     help='optimizer to use (SGD | ADAM | RMSprop)')
@@ -119,7 +119,7 @@ parser.add_argument('--epsilon', type=float, default=1e-8,
 parser.add_argument('--weight_decay', type=float, default=0,
                     help='weight decay')
 parser.add_argument('--gclip', type=float, default=0,
-                    help='gradient clipping threshold (0 = no clipping)')
+                    help='gradient clipping threshold (0 = no clipping)') # 梯度剪切阈值
 
 # Loss specifications  # 损失规格
 parser.add_argument('--loss', type=str, default='1*L1',

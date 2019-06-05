@@ -8,6 +8,7 @@ import numpy as np
 import torch
 import torch.utils.data as data
 
+
 class Benchmark(srdata.SRData):
     def __init__(self, args, name='', train=True, benchmark=True):
         super(Benchmark, self).__init__(
@@ -22,4 +23,3 @@ class Benchmark(srdata.SRData):
         else:
             self.dir_lr = os.path.join(self.apath, 'LR_bicubic')
         self.ext = ('', '.png')
-

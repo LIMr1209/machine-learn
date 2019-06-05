@@ -6,6 +6,7 @@ import torch.nn as nn
 import torch.nn.parallel as P
 import torch.utils.model_zoo
 
+
 class Model(nn.Module):
     def __init__(self, args, ckp):
         super(Model, self).__init__()
@@ -108,10 +109,10 @@ class Model(nn.Module):
         # height, width
         h, w = args[0].size()[-2:]
 
-        top = slice(0, h//2 + shave)
-        bottom = slice(h - h//2 - shave, h)
-        left = slice(0, w//2 + shave)
-        right = slice(w - w//2 - shave, w)
+        top = slice(0, h // 2 + shave)
+        bottom = slice(h - h // 2 - shave, h)
+        left = slice(0, w // 2 + shave)
+        right = slice(w - w // 2 - shave, w)
         x_chops = [torch.cat([
             a[..., top, left],
             a[..., top, right],
@@ -141,12 +142,12 @@ class Model(nn.Module):
 
         h *= scale
         w *= scale
-        top = slice(0, h//2)
-        bottom = slice(h - h//2, h)
-        bottom_r = slice(h//2 - h, None)
-        left = slice(0, w//2)
-        right = slice(w - w//2, w)
-        right_r = slice(w//2 - w, None)
+        top = slice(0, h // 2)
+        bottom = slice(h - h // 2, h)
+        bottom_r = slice(h // 2 - h, None)
+        left = slice(0, w // 2)
+        right = slice(w - w // 2, w)
+        right_r = slice(w // 2 - w, None)
 
         # batch size, number of color channels
         b, c = y_chops[0][0].size()[:-2]
