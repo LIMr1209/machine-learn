@@ -57,11 +57,11 @@
 #python main.py --template RCAN --save RCAN_BIX8_G10R20P48 --scale 8 --reset --save_results --patch_size 384 --pre_train ../experiment/model/RCAN_BIX2.pt
 
 # wdsr-a train
-# python main.py --model  wdsr_a --load WDSR_A_BIX4 --scale 4  --save_results --n_feats 128 --res_scale 0.1  --n_resblocks 32  --block_feats 512
+# python main.py --model  wdsr_a --save WDSR_A_BIX4 --scale 4  --save_results --n_feats 128 --res_scale 0.1  --n_resblocks 32  --block_feats 512
 # python main.py --model  wdsr_a --load WDSR_A_BIX4 --scale 4 --resume -1 --save_results --n_feats 128 --res_scale 0.1  --n_resblocks 32  --block_feats 512
 # wdsr-b train
-# python main.py --model  wdsr_b --load WDSR_B_BIX4 --scale 4  --save_results --n_feats 128 --res_scale 0.1  --n_resblocks 32  --block_feats 512
-python main.py --model  wdsr_b --load WDSR_B_BIX4 --scale 4 --resume -1 --save_results --n_feats 128 --res_scale 0.1  --n_resblocks 16  --block_feats 512
+python main.py --model  wdsr_b --save WDSR_B_BIX4 --scale 4  --save_results --n_feats 128 --res_scale 0.1  --n_resblocks 32  --block_feats 512
+#python main.py --model  wdsr_b --load WDSR_B_BIX4 --scale 4 --resume -1 --save_results --n_feats 128 --res_scale 0.1  --n_resblocks 16  --block_feats 512
 # Test your own images  测试自己的图片  wdsr-a
 # python main.py --data_test Demo --scale 4 --model  wdsr_a --pre_train  ../experiment/WDSR_A_BIX4/model/model_best.pt --test_only --save_results --n_feats 128  --block_feats 512  --n_resblocks 32 --res_scale 0.1
 # python main.py --data_test Demo --scale 4 --model  wdsr_b --pre_train  ../experiment/WDSR_B_BIX4/model/model_best.pt --test_only --save_results --n_feats 128  --block_feats 512  --n_resblocks 32 --res_scale 0.1

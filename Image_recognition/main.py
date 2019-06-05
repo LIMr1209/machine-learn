@@ -21,7 +21,7 @@ from torch.utils.tensorboard import SummaryWriter
 from torchvision.utils import make_grid
 
 seed = 1000
-# t.cuda.manual_seed(seed)  # 随机数种子,当使用随机数时,关闭进程后再次生成和上次得一样
+t.manual_seed(seed)  # 随机数种子,当使用随机数时,关闭进程后再次生成和上次得一样
 
 
 def test(**kwargs):
@@ -132,12 +132,12 @@ def train(**kwargs):
         # # 把张量从GPU 1 移动到 GPU 0
         # t.load(opt.load_model_path, map_location={'cuda:1': 'cuda:0'})
         checkpoint = t.load(opt.load_model_path)
-        # start_epoch = checkpoint["epoch"]
+        start_epoch = checkpoint["epoch"]
         # compression_scheduler.load_state_dict(checkpoint['compression_scheduler'], False)
-        # best_precision = checkpoint["best_precision"]
+        best_precision = checkpoint["best_precision"]
         model.load_state_dict(checkpoint["state_dict"])
-        # optimizer = checkpoint['optimizer']
-        # lr = optimizer.param_groups[0]['lr']
+        optimizer.load_state_dict(checkpoint['optimizer'])
+        lr = optimizer.param_groups[0]['lr']
     model.to(opt.device)  # 加载模型到 GPU
 
     if opt.compress:
@@ -149,7 +149,7 @@ def train(**kwargs):
         model.train()
         # step4: data_image
         train_data = DatasetFromFilename(opt.data_root, flag='train')  # 训练集
-        val_data = DatasetFromFilename(opt.data_root, flag='va')  # 验证集
+        val_data = DatasetFromFilename(opt.data_root, flag='valid')  # 验证集
         train_dataloader = DataLoader(train_data, opt.batch_size, shuffle=True, num_workers=opt.num_workers)  # 训练集加载器
         val_dataloader = DataLoader(val_data, opt.batch_size, shuffle=True, num_workers=opt.num_workers)  # 验证集加载器
         if opt.pruning:
@@ -236,9 +236,9 @@ def train(**kwargs):
                 "model_name": opt.model,
                 "state_dict": model.state_dict(),
                 "best_precision": best_precision,
-                "optimizer": optimizer,
+                "optimizer": optimizer.state_dict(),
                 "valid_loss": [val_loss, val_top1, val_top5],
-                'compression_scheduler': compression_scheduler.state_dict()
+                'compression_scheduler': compression_scheduler.state_dict(),
             })  # 保存模型
         # update learning rate
         # 如果训练误差比上次大　降低学习效率
