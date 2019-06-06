@@ -19,7 +19,7 @@ class DatasetFromFilename(data.Dataset):
         self.imgs, self.labels = splitter.getTrainingDataset()
         num = len(self.imgs)
         if self.flag == 'test':
-            self.imgs, self.labels = splitter.getValidationDataset()  # 测试数据
+            self.imgs, self.labels = splitter.getTestationDataset()  # 测试数据
         elif self.flag == 'train':
             self.imgs = self.imgs[int(0.2 * num):]
             self.labels = self.labels[int(0.2 * num):]
@@ -89,4 +89,4 @@ if __name__ == '__main__':
     img = DatasetFromFilename(r'/image/image', flag='test')
     splitter = ImageFolderSplitter('/image/image')
     x_train, y_train = splitter.getTrainingDataset()
-    x_valid, y_valid = splitter.getValidationDataset()
+    x_valid, y_valid = splitter.getTestationDataset()

@@ -6,6 +6,15 @@ import os
 import time
 
 
+# 检查数据
+def check_date(img_path, tag, msglogger):
+    for i in range(len(tag)):
+        if tag[i] not in img_path[i]:
+            msglogger.info('数据集错误')
+            return False
+    return True
+
+
 # 仪表盘
 class AverageMeter(object):
     """Computes and stores the average and current value"""

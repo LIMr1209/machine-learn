@@ -1,28 +1,18 @@
 import os
-
+from collections import OrderedDict
 
 # 获取目录下所有分类和图片数据
 def get_classes(path):
-    class2num = {}
+    class2num = OrderedDict()
     data_x_path = []
     data_y_label = []
-    for root, dirs, files in os.walk(path):
-        if len(files) == 0 and len(dirs) > 1:
-            for i, dir1 in enumerate(dirs):
-                class2num[dir1] = i
-        elif len(files) > 1 and len(dirs) == 0:
-            category = ""
-            for key in class2num.keys():
-                if key in root:
-                    category = key
-                    break
-            label = class2num[category]
-            files.sort()
-            for i in range(len(files)):
-                data_x_path.append(os.path.join(root, files[i]))
-                data_y_label.append(label)
-        else:
-            raise RuntimeError("please check the folder structure!")
+    for i, dirs in enumerate(os.listdir(path)):
+        class2num[dirs] = i
+        files = []
+        for j, file in enumerate(os.listdir(os.path.join(path, dirs))):
+            files.append(os.path.join(path, dirs, file))
+            data_y_label.append(i)
+        data_x_path.extend(sorted(files))
     return {'class2num': list(class2num.keys()), 'data_x_path': data_x_path, 'data_y_label': data_y_label}
 
 

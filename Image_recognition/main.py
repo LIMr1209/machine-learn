@@ -2,7 +2,6 @@ import math
 import os
 import operator
 from datetime import datetime
-
 import distiller
 from distiller.data_loggers import *
 from config import opt
@@ -11,7 +10,7 @@ import models
 from data.dataset import DatasetFromFilename
 from torch.utils.data import DataLoader
 from utils.image_loader import image_loader
-from utils.utils import AverageMeter, accuracy, write_err_img,config_pylogger
+from utils.utils import AverageMeter, accuracy, write_err_img, config_pylogger, check_date
 from utils.sensitivity import sensitivity_analysis, val
 from utils.progress_bar import ProgressBar
 from tqdm import tqdm
@@ -49,7 +48,8 @@ def test(**kwargs):
             model.to(opt.device)
         model.eval()  # 把module设成测试模式，对Dropout和BatchNorm有影响
         err_img = [('img_path', 'result', 'label')]
-        for ii, (data, labels, img_path,tag) in tqdm(enumerate(test_dataloader)):
+        for ii, (data, labels, img_path, tag) in tqdm(enumerate(test_dataloader)):
+            if not check_date(img_path, tag, msglogger): return
             input = data.to(opt.device)
             labels = labels.to(opt.device)
             score = model(input)
@@ -136,7 +136,7 @@ def train(**kwargs):
         # compression_scheduler.load_state_dict(checkpoint['compression_scheduler'], False)
         best_precision = checkpoint["best_precision"]
         model.load_state_dict(checkpoint["state_dict"])
-        optimizer.load_state_dict(checkpoint['optimizer'])
+        optimizer = checkpoint['optimizer']
         lr = optimizer.param_groups[0]['lr']
     model.to(opt.device)  # 加载模型到 GPU
 
@@ -144,14 +144,14 @@ def train(**kwargs):
         compression_scheduler = distiller.file_config(model, optimizer, opt.compress,
                                                       compression_scheduler)  # 加载模型修剪计划表
         model.to(opt.device)
+    # step4: data_image
+    train_data = DatasetFromFilename(opt.data_root, flag='train')  # 训练集
+    val_data = DatasetFromFilename(opt.data_root, flag='valid')  # 验证集
+    train_dataloader = DataLoader(train_data, opt.batch_size, shuffle=True, num_workers=opt.num_workers)  # 训练集加载器
+    val_dataloader = DataLoader(val_data, opt.batch_size, shuffle=True, num_workers=opt.num_workers)  # 验证集加载器
     # train
     for epoch in range(start_epoch, opt.max_epoch):
         model.train()
-        # step4: data_image
-        train_data = DatasetFromFilename(opt.data_root, flag='train')  # 训练集
-        val_data = DatasetFromFilename(opt.data_root, flag='valid')  # 验证集
-        train_dataloader = DataLoader(train_data, opt.batch_size, shuffle=True, num_workers=opt.num_workers)  # 训练集加载器
-        val_dataloader = DataLoader(val_data, opt.batch_size, shuffle=True, num_workers=opt.num_workers)  # 验证集加载器
         if opt.pruning:
             compression_scheduler.on_epoch_begin(epoch)  # epoch 开始修剪
         train_losses.reset()  # 重置仪表
@@ -162,8 +162,8 @@ def train(**kwargs):
         train_progressor = ProgressBar(mode="Train  ", epoch=epoch, total_epoch=opt.max_epoch,
                                        model_name=opt.model, lr=lr,
                                        total=len(train_dataloader))
-        for ii, (data, labels, img_path,tag) in enumerate(train_dataloader):
-
+        for ii, (data, labels, img_path, tag) in enumerate(train_dataloader):
+            if not check_date(img_path, tag, msglogger): return
             if opt.pruning:
                 compression_scheduler.on_minibatch_begin(epoch, ii, steps_per_epoch, optimizer)  # batch 开始修剪
             train_progressor.current = ii + 1  # 训练集当前进度
@@ -229,7 +229,7 @@ def train(**kwargs):
                            score.top1, score.top5, score.sparsity, score.epoch, lr, score.loss)
 
         best_precision = max(perf_scores_history[0].top1, best_precision)  # 最大top1 准确率
-        is_best = epoch+1 == perf_scores_history[0].epoch  # 当前epoch 和最佳epoch 一样
+        is_best = epoch + 1 == perf_scores_history[0].epoch  # 当前epoch 和最佳epoch 一样
         if is_best:
             model.save({
                 "epoch": epoch + 1,

@@ -6,7 +6,7 @@ from torchvision.utils import make_grid
 
 from config import opt
 from utils.progress_bar import ProgressBar
-from utils.utils import accuracy, AverageMeter
+from utils.utils import accuracy, AverageMeter, check_date
 
 
 def val(model, criterion, dataloader, epoch=None, val_writer=None, lr=None, msglogger=None):
@@ -24,6 +24,7 @@ def val(model, criterion, dataloader, epoch=None, val_writer=None, lr=None, msgl
                                          lr=lr,
                                          total=len(dataloader))
         for ii, (data, labels, img_path,tag) in enumerate(dataloader):
+            if not check_date(img_path, tag, msglogger): return
             input = data.to(opt.device)
             labels = labels.to(opt.device)
             score = model(input)
