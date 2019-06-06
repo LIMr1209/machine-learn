@@ -87,7 +87,7 @@ parser.add_argument('--reset', action='store_true',
                     help='reset the training')  # 重新设置培训
 parser.add_argument('--test_every', type=int, default=1000,
                     help='do test per every N batches')  # 每N批测试一次
-parser.add_argument('--epochs', type=int, default=7,
+parser.add_argument('--epochs', type=int, default=400,
                     help='number of epochs to train')  # 要培训的时段数
 parser.add_argument('--batch_size', type=int, default=16,
                     help='input batch size for training')  # 输入培训批量
@@ -97,6 +97,8 @@ parser.add_argument('--self_ensemble', action='store_true',
                     help='use self-ensemble method for test')  # 用self-ensemble 方法进行测试
 parser.add_argument('--test_only', action='store_true',
                     help='set this option to test the model')  # 设置此选项以测试模型
+parser.add_argument('--demo_gen', action='store_true',
+                    help='set this option to demo the model')  # 设置此选项以做demo
 parser.add_argument('--gan_k', type=int, default=1,
                     help='k value for adversarial loss')
 

@@ -8,7 +8,7 @@ import torch.utils.model_zoo
 
 
 class Model(nn.Module):
-    def __init__(self, args, ckp):
+    def __init__(self, args, ckp=None):
         super(Model, self).__init__()
         print('Making model...')
 
@@ -27,14 +27,14 @@ class Model(nn.Module):
         self.model = module.make_model(args).to(self.device)
         if args.precision == 'half':
             self.model.half()
-
-        self.load(
-            ckp.get_path('model'),
-            pre_train=args.pre_train,
-            resume=args.resume,
-            cpu=args.cpu
-        )
-        print(self.model, file=ckp.log_file)
+        if not args.demo_gen:
+            self.load(
+                ckp.get_path('model'),
+                pre_train=args.pre_train,
+                resume=args.resume,
+                cpu=args.cpu
+            )
+            print(self.model, file=ckp.log_file)
 
     def forward(self, x, idx_scale):
         self.idx_scale = idx_scale
