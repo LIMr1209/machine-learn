@@ -35,7 +35,7 @@ def test(**kwargs):
         model.to(opt.device)
         model.eval()  # 把module设成测试模式，对Dropout和BatchNorm有影响
         # data
-        test_data = DatasetFromFilename(opt.data_root, flag='train')  # 测试集
+        test_data = DatasetFromFilename(opt.data_root, flag='valid')  # 测试集
         test_dataloader = DataLoader(test_data, batch_size=opt.batch_size, shuffle=True, num_workers=opt.num_workers)
         correct = 0
         total = 0
@@ -146,7 +146,7 @@ def train(**kwargs):
         model.to(opt.device)
     # step4: data_image
     train_data = DatasetFromFilename(opt.data_root, flag='train')  # 训练集
-    val_data = DatasetFromFilename(opt.data_root, flag='valid')  # 验证集
+    val_data = DatasetFromFilename(opt.data_root, flag='test')  # 验证集
     train_dataloader = DataLoader(train_data, opt.batch_size, shuffle=True, num_workers=opt.num_workers)  # 训练集加载器
     val_dataloader = DataLoader(val_data, opt.batch_size, shuffle=True, num_workers=opt.num_workers)  # 验证集加载器
     # train

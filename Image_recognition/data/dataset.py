@@ -79,7 +79,7 @@ class DatasetFromFilename(data.Dataset):
         data = Image.open(img_path)
         data = data.convert("RGB")  # 如果有4通道图片转化为3通道
         data = self.transforms(data)
-        return data, label, img_path ,opt.cate_classes[label]  # 返回数据级标签图片路径
+        return data, label, img_path, opt.cate_classes[label]  # 返回数据级标签图片路径
 
     def __len__(self):
         return len(self.imgs)

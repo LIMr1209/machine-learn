@@ -1,6 +1,7 @@
 from sklearn.model_selection import train_test_split
 from utils.get_classes import get_classes
 from config import opt
+import random
 
 
 class ImageFolderSplitter:
@@ -44,6 +45,16 @@ class ImageFolderSplitter:
                 self.x_test.extend(x_test)
                 self.y_train.extend(y_train)
                 self.y_test.extend(y_test)
+
+            randnum = random.randint(0, 100)
+            random.seed(randnum)
+            random.shuffle(self.x_train)
+            random.seed(randnum)
+            random.shuffle(self.x_test)
+            random.seed(randnum)
+            random.shuffle(self.y_train)
+            random.seed(randnum)
+            random.shuffle(self.y_test)
 
     def getTrainingDataset(self):  # 返回训练集
         return self.x_train, self.y_train
