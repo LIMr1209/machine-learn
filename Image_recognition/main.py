@@ -19,6 +19,9 @@ import distiller.quantization as quantization
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.utils import make_grid
 
+t.backends.cudnn.benchmark = True
+# 如果我们的输入在每一次的iterate的时候都进行变化，那么benchmark就会在每次iterate的时候重新选择最优算法，当选选择是需要花费时间的，
+# 反而速度会变慢，也就是说，如果我们每次训练的输入数据的size不变，那么开启这个就会加快我们的训练速度：
 seed = 1000
 t.manual_seed(seed)  # 随机数种子,当使用随机数时,关闭进程后再次生成和上次得一样
 
@@ -249,6 +252,7 @@ def train(**kwargs):
                 param_group['lr'] = lr
 
         previous_loss = train_losses.val
+        t.cuda.empty_cache()  # 这个命令是清除没用的临时变量的
 
 
 # 模型敏感性分析
