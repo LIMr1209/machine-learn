@@ -165,7 +165,10 @@ class checkpoint():
 # 还原图图片
 def quantize(img, rgb_range):
     pixel_range = 255 / rgb_range
-    return img.mul(pixel_range).clamp(0, 255).round().div(pixel_range)
+    img = img.mul(pixel_range)
+    img = img.clamp(0, 255)
+    img = img.round()
+    return img.div(pixel_range)
 
 
 def calc_psnr(sr, hr, scale, rgb_range, dataset=None):
