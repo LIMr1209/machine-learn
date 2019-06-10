@@ -20,10 +20,13 @@ import scipy.io as sio
 def parse_args():
     parser = argparse.ArgumentParser(description='batch proccesing: photos->edges')
     parser.add_argument('--caffe_root', dest='caffe_root', help='caffe root', default='../../', type=str)
-    parser.add_argument('--caffemodel', dest='caffemodel', help='caffemodel', default='./hed_pretrained_bsds.caffemodel', type=str)
-    parser.add_argument('--prototxt', dest='prototxt', help='caffe prototxt file', default='./deploy.prototxt', type=str)
+    parser.add_argument('--caffemodel', dest='caffemodel', help='caffemodel',
+                        default='./hed_pretrained_bsds.caffemodel', type=str)
+    parser.add_argument('--prototxt', dest='prototxt', help='caffe prototxt file', default='./deploy.prototxt',
+                        type=str)
     parser.add_argument('--images_dir', dest='images_dir', help='directory to store input photos', type=str)
-    parser.add_argument('--hed_mat_dir', dest='hed_mat_dir', help='directory to store output hed edges in mat file', type=str)
+    parser.add_argument('--hed_mat_dir', dest='hed_mat_dir', help='directory to store output hed edges in mat file',
+                        type=str)
     parser.add_argument('--border', dest='border', help='padding border', type=int, default=128)
     parser.add_argument('--gpu_id', dest='gpu_id', help='gpu id', type=int, default=1)
     args = parser.parse_args()
@@ -34,10 +37,9 @@ args = parse_args()
 for arg in vars(args):
     print('[%s] =' % arg, getattr(args, arg))
 # Make sure that caffe is on the python path:
-caffe_root = args.caffe_root   # this file is expected to be in {caffe_root}/examples/hed/
+caffe_root = args.caffe_root  # this file is expected to be in {caffe_root}/examples/hed/
 sys.path.insert(0, caffe_root + 'python')
 import caffe
-
 
 if not os.path.exists(args.hed_mat_dir):
     print('create output directory %s' % args.hed_mat_dir)

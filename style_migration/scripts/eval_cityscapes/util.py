@@ -22,8 +22,8 @@ def segrun(net, in_):
 
 def fast_hist(a, b, n):
     k = np.where((a >= 0) & (a < n))[0]
-    bc = np.bincount(n * a[k].astype(int) + b[k], minlength=n**2)
-    if len(bc) != n**2:
+    bc = np.bincount(n * a[k].astype(int) + b[k], minlength=n ** 2)
+    if len(bc) != n ** 2:
         # ignore this example if dimension mismatch
         return 0
     return bc.reshape(n, n)

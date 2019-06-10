@@ -24,7 +24,7 @@ def align_images(a_file_paths, b_file_paths, target_path):
     for i in range(len(a_file_paths)):
         img_a = Image.open(a_file_paths[i])
         img_b = Image.open(b_file_paths[i])
-        assert(img_a.size == img_b.size)
+        assert (img_a.size == img_b.size)
 
         aligned_image = Image.new("RGB", (img_a.size[0] * 2, img_a.size[1]))
         aligned_image.paste(img_a, (0, 0))
@@ -34,6 +34,7 @@ def align_images(a_file_paths, b_file_paths, target_path):
 
 if __name__ == '__main__':
     import argparse
+
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--dataset-path',
@@ -49,14 +50,14 @@ if __name__ == '__main__':
     test_b_path = os.path.join(dataset_folder, 'testB')
     test_a_file_paths = get_file_paths(test_a_path)
     test_b_file_paths = get_file_paths(test_b_path)
-    assert(len(test_a_file_paths) == len(test_b_file_paths))
+    assert (len(test_a_file_paths) == len(test_b_file_paths))
     test_path = os.path.join(dataset_folder, 'test')
 
     train_a_path = os.path.join(dataset_folder, 'trainA')
     train_b_path = os.path.join(dataset_folder, 'trainB')
     train_a_file_paths = get_file_paths(train_a_path)
     train_b_file_paths = get_file_paths(train_b_path)
-    assert(len(train_a_file_paths) == len(train_b_file_paths))
+    assert (len(train_a_file_paths) == len(train_b_file_paths))
     train_path = os.path.join(dataset_folder, 'train')
 
     align_images(test_a_file_paths, test_b_file_paths, test_path)

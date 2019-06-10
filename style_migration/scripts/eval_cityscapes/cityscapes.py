@@ -18,8 +18,10 @@ class cityscapes:
         # import cityscapes label helper and set up label mappings
         sys.path.insert(0, '{}/scripts/helpers/'.format(self.dir))
         labels = __import__('labels')
-        self.id2trainId = {label.id: label.trainId for label in labels.labels}  # dictionary mapping from raw IDs to train IDs
-        self.trainId2color = {label.trainId: label.color for label in labels.labels}  # dictionary mapping train IDs to colors as 3-tuples
+        self.id2trainId = {label.id: label.trainId for label in
+                           labels.labels}  # dictionary mapping from raw IDs to train IDs
+        self.trainId2color = {label.trainId: label.color for label in
+                              labels.labels}  # dictionary mapping train IDs to colors as 3-tuples
 
     def get_dset(self, split):
         '''
@@ -98,7 +100,7 @@ class cityscapes:
         Extract pixels at the true boundary by dilation - erosion of label.
         Don't just pick the void label as it is not exclusive to the boundaries.
         """
-        assert(thickness is not None)
+        assert (thickness is not None)
         import skimage.morphology as skm
         void = 255
         mask = np.logical_and(label > 0, label != void)[0]
@@ -112,10 +114,12 @@ class cityscapes:
         Select labeled frames from a split for evaluation
         collected as (city, shot, idx) tuples
         """
+
         def file2idx(f):
             """Helper to convert file path into frame ID"""
             city, shot, frame = (os.path.basename(f).split('_')[:3])
             return "_".join([city, shot, frame])
+
         frames = []
         cities = [os.path.basename(f) for f in glob.glob('{}/gtFine/{}/*'.format(self.dir, split))]
         for c in cities:

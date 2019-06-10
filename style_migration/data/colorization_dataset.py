@@ -12,6 +12,7 @@ class ColorizationDataset(BaseDataset):
 
     This dataset is required by pix2pix-based colorization model ('--model colorization')
     """
+
     @staticmethod
     def modify_commandline_options(parser, is_train):
         """Add new dataset-specific options, and rewrite default values for existing options.
@@ -38,7 +39,7 @@ class ColorizationDataset(BaseDataset):
         BaseDataset.__init__(self, opt)
         self.dir = os.path.join(opt.dataroot)
         self.AB_paths = sorted(make_dataset(self.dir, opt.max_dataset_size))
-        assert(opt.input_nc == 1 and opt.output_nc == 2 and opt.direction == 'AtoB')
+        assert (opt.input_nc == 1 and opt.output_nc == 2 and opt.direction == 'AtoB')
         self.transform = get_transform(self.opt, convert=False)
 
     def __getitem__(self, index):

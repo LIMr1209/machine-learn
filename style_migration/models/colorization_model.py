@@ -11,6 +11,7 @@ class ColorizationModel(Pix2PixModel):
     It trains a pix2pix model, mapping from L channel to ab channels in Lab color space.
     By default, the colorization dataset will automatically set '--input_nc 1' and '--output_nc 2'.
     """
+
     @staticmethod
     def modify_commandline_options(parser, is_train=True):
         """Add new dataset-specific options, and rewrite default values for existing options.

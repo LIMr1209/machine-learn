@@ -12,12 +12,15 @@ You need to implement the following functions:
     -- <__len__>: Return the number of images.
 """
 from data.base_dataset import BaseDataset, get_transform
+
+
 # from data.image_folder import make_dataset
 # from PIL import Image
 
 
 class TemplateDataset(BaseDataset):
     """A template dataset class for you to implement custom datasets."""
+
     @staticmethod
     def modify_commandline_options(parser, is_train):
         """Add new dataset-specific options, and rewrite default values for existing options.
@@ -65,9 +68,9 @@ class TemplateDataset(BaseDataset):
         Step 3: convert your data to a PyTorch tensor. You can use helpder functions such as self.transform. e.g., data = self.transform(image)
         Step 4: return a data point as a dictionary.
         """
-        path = 'temp'    # needs to be a string
-        data_A = None    # needs to be a tensor
-        data_B = None    # needs to be a tensor
+        path = 'temp'  # needs to be a string
+        data_A = None  # needs to be a tensor
+        data_B = None  # needs to be a tensor
         return {'data_A': data_A, 'data_B': data_B, 'path': path}
 
     def __len__(self):

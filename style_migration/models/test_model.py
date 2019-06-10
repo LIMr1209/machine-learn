@@ -8,6 +8,7 @@ class TestModel(BaseModel):
 
     See the test instruction for more details.
     """
+
     @staticmethod
     def modify_commandline_options(parser, is_train=True):
         """Add new dataset-specific options, and rewrite default values for existing options.
@@ -24,7 +25,8 @@ class TestModel(BaseModel):
         """
         assert not is_train, 'TestModel cannot be used during training time'
         parser.set_defaults(dataset_mode='single')
-        parser.add_argument('--model_suffix', type=str, default='', help='In checkpoints_dir, [epoch]_net_G[model_suffix].pth will be loaded as the generator.')
+        parser.add_argument('--model_suffix', type=str, default='',
+                            help='In checkpoints_dir, [epoch]_net_G[model_suffix].pth will be loaded as the generator.')
 
         return parser
 
@@ -34,7 +36,7 @@ class TestModel(BaseModel):
         Parameters:
             opt (Option class)-- stores all the experiment flags; needs to be a subclass of BaseOptions
         """
-        assert(not opt.isTrain)
+        assert (not opt.isTrain)
         BaseModel.__init__(self, opt)
         # specify the training losses you want to print out. The training/test scripts  will call <BaseModel.get_current_losses>
         self.loss_names = []
