@@ -239,7 +239,7 @@ def train(**kwargs):
                 "model_name": opt.model,
                 "state_dict": model.state_dict(),
                 "best_precision": best_precision,
-                "optimizer": optimizer.state_dict(),
+                "optimizer": optimizer,
                 "valid_loss": [val_loss, val_top1, val_top5],
                 'compression_scheduler': compression_scheduler.state_dict(),
             })  # 保存模型
