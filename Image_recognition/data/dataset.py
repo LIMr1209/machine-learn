@@ -1,6 +1,8 @@
 from PIL import Image
 from torch.utils import data
 from torchvision import transforms as T
+
+from utils.get_classes import get_new_train
 from utils.imagefolder_splitter import ImageFolderSplitter
 from config import opt
 
@@ -23,6 +25,11 @@ class DatasetFromFilename(data.Dataset):
         elif self.flag == 'train':
             self.imgs = self.imgs[int(0.2 * num):]
             self.labels = self.labels[int(0.2 * num):]
+            if opt.new_train:
+                imgs, labels = get_new_train(opt.new_train)
+                self.imgs.extend(imgs)
+                self.labels.extend(labels)
+
             # 训练数据
         elif self.flag == 'valid':
             self.imgs = self.imgs[:int(0.2 * num)]
@@ -66,7 +73,6 @@ class DatasetFromFilename(data.Dataset):
                     T.ToTensor(),  # 转tensor
                     normalize  # 归一化
                 ])
-
 
     def __getitem__(self, index):
         """

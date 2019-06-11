@@ -19,6 +19,7 @@ class DefaultConfig(object):
 
     cate_classes = get_classes(data_root)['class2num']  # 图像分类标签列表
     num_classes = len(cate_classes)  # 图像分类个数
+    new_train = None  # 新训练图片的路径
     # pretrained = False  # 不加载预训练
     pretrained = True  # 加载预训练模型
     # pruning = True   # 压缩计划表
@@ -46,7 +47,7 @@ class DefaultConfig(object):
     lr = 0.001  # 学习效率
     lr_decay = 0.5  # 误差增加时,学习效率下降
     weight_decay = 0e-5  # 损失函数
-    date_shuffle = True  # 数据集有序False 随机True
+    # date_shuffle = True  # 数据集有序False 随机True
     url = 'https://imgservice1.suning.cn/uimg1/b2c/image/nc5F5_pjiXv5sYaX2Hrx4w.jpg_800w_800h_4e'  # 识别图片
     error_img = 'error_img.csv'
 

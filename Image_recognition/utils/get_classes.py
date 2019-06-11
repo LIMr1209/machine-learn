@@ -1,6 +1,7 @@
 import os
 from collections import OrderedDict
 
+
 # 获取目录下所有分类和图片数据
 def get_classes(path):
     class2num = OrderedDict()
@@ -13,7 +14,20 @@ def get_classes(path):
             files.append(os.path.join(path, dirs, file))
             data_y_label.append(i)
         data_x_path.extend(sorted(files))
-    return {'class2num': list(class2num.keys()), 'data_x_path': data_x_path, 'data_y_label': data_y_label}
+    return {'class2num': list(class2num.keys()), 'data_x_path': data_x_path, 'data_y_label': data_y_label,
+            'classes_dict': class2num}
+
+
+def get_new_train(old_path, new_path):
+    new_img = []
+    new_label = []
+    classes_dict = get_classes(old_path)
+    for dirs in os.listdir(new_path):
+        label = classes_dict[dirs]
+        for file in os.listdir(os.path.join(new_path, dirs)):
+            new_img.append(file)
+            new_label.append(label)
+    return new_img, new_label
 
 
 if __name__ == '__main__':
