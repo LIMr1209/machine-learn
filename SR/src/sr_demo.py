@@ -5,39 +5,45 @@ from option import args
 import utility
 from data import common
 
+args.demo_gen = True
+args.n_feats = 128
+args.block_feats = 512
+args.n_resblocks = 32
+args.res_scale = 0.1
+args.scale = [4]
+args.model = 'wdsr_b'
+
 
 # 生成高分辨率图片
-
-def prepare(self, *args):
-    device = torch.device('cpu' if self.args.cpu else 'cuda')
-
-    def _prepare(tensor):
-        if self.args.precision == 'half': tensor = tensor.half()
-        return tensor.to(device)
-
-    return [_prepare(a) for a in args]
+def load_model(path):
+    _model = model.Model(args)
+    load_from = torch.load(path)
+    _model.model.load_state_dict(load_from)
+    _model.eval()
+    return _model
 
 
-# demo_gen == True
-_model = model.Model(args)
-
-load_from = torch.load('../experiment/WDSR_B_BIX4/model/model_best.pt')
-_model.model.load_state_dict(load_from)
-
-torch.set_grad_enabled(False)
-_model.eval()
-
-for idx_scale, scale in enumerate(args.scale):
-    lr = imageio.imread('../test/0810.png')
+def load_img(path):
+    lr = imageio.imread(path)
     lr, = common.set_channel(lr, n_channels=args.n_colors)
     lr_t, = common.np2Tensor(lr, rgb_range=args.rgb_range)
-    lr_t = lr_t.to(torch.device('cuda'))
-    lr_s = lr_t.view(1, 3, 384, 510)
-    sr = _model(lr_s, idx_scale)
-    sr = utility.quantize(sr, args.rgb_range)
-    normalized = sr[0].mul(255 / args.rgb_range)
+    lr_t = lr_t.view(1, 3, 384, 510).to(torch.device('cuda'))
+    return lr_t
+
+
+def save_img(output, path):
+    output = utility.quantize(output, args.rgb_range)
+    normalized = output[0].mul(255 / args.rgb_range)
     tensor_cpu = normalized.byte().permute(1, 2, 0).cpu()
-    filename = '../test/0810x%s.png' % scale
+    filename = path % scale
     imageio.imwrite(filename, tensor_cpu.numpy())
 
-torch.set_grad_enabled(True)
+
+if __name__ == '__main__':
+    _model = load_model('../experiment/WDSR_B_BIX4/model/model_best.pt')
+    torch.set_grad_enabled(False)
+    for idx_scale, scale in enumerate(args.scale):
+        input = load_img('../test/0810.png')
+        output = _model(input, idx_scale)
+        save_img(output, '../test/0810x%s.png')
+    torch.set_grad_enabled(True)
