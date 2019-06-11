@@ -6,7 +6,7 @@ from utils.get_classes import get_classes
 
 class DefaultConfig(object):
     image_size = 224  # 图片尺寸
-    model = 'ResNet152'  # 使用的模型，名字必须与models/__init__.py中的名字一致
+    model = 'EfficientNet'  # 使用的模型，名字必须与models/__init__.py中的名字一致
 
     data_root = "/image/image"  # 数据集存放路径
     load_model_path = None  # 加载训练的模型的路径，为None代表不加载
@@ -46,7 +46,7 @@ class DefaultConfig(object):
     lr = 0.001  # 学习效率
     lr_decay = 0.5  # 误差增加时,学习效率下降
     weight_decay = 0e-5  # 损失函数
-    date_shuffle = False  # 数据集有序False 随机True
+    date_shuffle = True  # 数据集有序False 随机True
     url = 'https://imgservice1.suning.cn/uimg1/b2c/image/nc5F5_pjiXv5sYaX2Hrx4w.jpg_800w_800h_4e'  # 识别图片
     error_img = 'error_img.csv'
 

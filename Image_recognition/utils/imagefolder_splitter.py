@@ -17,10 +17,10 @@ class ImageFolderSplitter:
         self.data_y_label = get_classes(path)['data_y_label']
         if opt.date_shuffle:
             # 随机80%的训练集和20%的测试集
-            self.x_train, self.x_test, self.y_train, self.y_test = train_test_split(self.data_x_img,
+            self.x_test, self.x_train, self.y_test, self.y_train = train_test_split(self.data_x_img,
                                                                                     self.data_y_label,
                                                                                     shuffle=True,
-                                                                                    train_size=self.train_size)
+                                                                                    test_size=self.train_size)
         else:
             # 有序的80%的训练集和20%的测试集
             self.label = []
