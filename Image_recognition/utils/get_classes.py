@@ -7,7 +7,7 @@ def get_classes(path):
     class2num = OrderedDict()
     data_x_path = []
     data_y_label = []
-    for i, dirs in enumerate(os.listdir(path)):
+    for i, dirs in enumerate(sorted(os.listdir(path))):
         class2num[dirs] = i
         files = []
         for j, file in enumerate(os.listdir(os.path.join(path, dirs))):
@@ -16,6 +16,26 @@ def get_classes(path):
         data_x_path.extend(sorted(files))
     return {'class2num': list(class2num.keys()), 'data_x_path': data_x_path, 'data_y_label': data_y_label,
             'classes_dict': class2num}
+
+
+def find_classes(path):
+    classes = [d for d in os.listdir(path) if os.path.isdir(os.path.join(path, d))]
+    classes.sort()
+    class_to_idx = {classes[i]: i for i in range(len(classes))}
+    images = []
+    dir = os.path.expanduser(path)
+    for target in sorted(os.listdir(dir)):
+        d = os.path.join(dir, target)
+        if not os.path.isdir(d):
+            continue
+
+        for root, _, fnames in sorted(os.walk(d)):
+            for fname in sorted(fnames):
+                path = os.path.join(root, fname)
+                item = (path, class_to_idx[target])
+                images.append(item)
+
+    return images, classes, class_to_idx
 
 
 def get_new_train(old_path, new_path):
@@ -31,4 +51,5 @@ def get_new_train(old_path, new_path):
 
 
 if __name__ == '__main__':
-    print(get_classes('/image/image')['class2num'])
+    a = get_classes('/image/image')
+    b = find_classes('/image/image')
