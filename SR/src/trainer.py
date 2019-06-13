@@ -69,6 +69,7 @@ class Trainer:
         self.loss.end_log(len(self.loader_train))
         self.error_last = self.loss.log[-1, -1]
         self.optimizer.schedule()
+        torch.cuda.empty_cache()
 
     def test(self):
         torch.set_grad_enabled(False)
