@@ -10,7 +10,7 @@ import models
 from data.dataset import DatasetFromFilename
 from torch.utils.data import DataLoader
 from utils.image_loader import image_loader
-from utils.utils import AverageMeter, accuracy, write_err_img, config_pylogger, check_date
+from utils.utils import AverageMeter, accuracy, write_err_img, config_pylogger, check_date, get_scheduler
 from utils.sensitivity import sensitivity_analysis, val
 from utils.progress_bar import ProgressBar
 from tqdm import tqdm
@@ -110,7 +110,7 @@ def train(**kwargs):
     best_precision = 0  # 最好的精确度
     start_epoch = 0
     lr = opt.lr
-    perf_scores_history = []
+    perf_scores_history = []  # 绩效分数
     # step1: criterion and optimizer
     # 1. 铰链损失（Hinge Loss）：主要用于支持向量机（SVM） 中；
     # 2. 互熵损失 （Cross Entropy Loss，Softmax Loss ）：用于Logistic 回归与Softmax 分类中；
@@ -140,13 +140,14 @@ def train(**kwargs):
         best_precision = checkpoint["best_precision"]
         model.load_state_dict(checkpoint["state_dict"])
         optimizer = checkpoint['optimizer']
-        lr = optimizer.param_groups[0]['lr']
     model.to(opt.device)  # 加载模型到 GPU
 
     if opt.compress:
         compression_scheduler = distiller.file_config(model, optimizer, opt.compress,
                                                       compression_scheduler)  # 加载模型修剪计划表
         model.to(opt.device)
+    # 学习速率调整器
+    lr_scheduler = get_scheduler(optimizer, opt)
     # step4: data_image
     train_data = DatasetFromFilename(opt.data_root, flag='train')  # 训练集
     val_data = DatasetFromFilename(opt.data_root, flag='test')  # 验证集
@@ -165,6 +166,7 @@ def train(**kwargs):
         train_progressor = ProgressBar(mode="Train  ", epoch=epoch, total_epoch=opt.max_epoch,
                                        model_name=opt.model, lr=lr,
                                        total=len(train_dataloader))
+        lr = lr_scheduler.get_lr()
         for ii, (data, labels, img_path, tag) in enumerate(train_dataloader):
             if not check_date(img_path, tag, msglogger): return
             if opt.pruning:
@@ -244,14 +246,15 @@ def train(**kwargs):
                 'compression_scheduler': compression_scheduler.state_dict(),
             })  # 保存模型
         # update learning rate
+        lr_scheduler.step(epoch)  # 更新学习效率
         # 如果训练误差比上次大　降低学习效率
-        if train_losses.val > previous_loss:
-            lr = lr * opt.lr_decay
-            # 当loss大于上一次loss,降低学习率
-            for param_group in optimizer.param_groups:
-                param_group['lr'] = lr
-
-        previous_loss = train_losses.val
+        # if train_losses.val > previous_loss:
+        #     lr = lr * opt.lr_decay
+        #     # 当loss大于上一次loss,降低学习率
+        #     for param_group in optimizer.param_groups:
+        #         param_group['lr'] = lr
+        #
+        # previous_loss = train_losses.val
         t.cuda.empty_cache()  # 这个命令是清除没用的临时变量的
 
 

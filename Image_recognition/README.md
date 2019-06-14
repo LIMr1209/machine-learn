@@ -25,11 +25,16 @@ python main.py train --env='test' --use-gpu --print-freq=4
 - vis = False  # 是否使用tensorboard可视化
 - pretrained = True  # 加载预训练模型
 - max_epoch = 25  # 学习次数
-- lr = 0.001  # 学习效率
-- lr_decay = 0.5  # 误差增加时,学习效率下降
-- weight_decay = 0e-5  # 损失函数
+- max_epoch = 25  # 学习次数
+- lr = 0.001  # 初始学习效率
+- lr_gamma = 0.5  # 学习效率下降 lr*lr_decay
+- lr_policy = 'multi'  # 学习效率调度器
+- lr_epoch = [3, 5, 7]  # 训练epoch达到milestones值时,初始学习率乘以gamma得到新的学习率;
+- weight_decay = 0e-5  # 优化器权值衰减率
 - error_img = 'error_img.csv' # 测试图片错误统计
 - url = '图片地址'
+- output_dir = 'logs'  # 日志输出
+- name = 'opalus_recognltion'  # 实验名
 
 修剪量化参数,敏感性分析
 - pruning = False  # 是否修剪
@@ -45,8 +50,6 @@ python main.py train --env='test' --use-gpu --print-freq=4
 - qe_per_channel = False
 - qe_stats_file = None
 - qe_config_file = None
-- output_dir = 'logs'  # 日志输出
-- name = 'opalus_recognltion'  # 实验名
 - sensitivity = 'element'  # ['element', 'filter', 'channel']  # 神经网络敏感性分析
 - sensitivity_range = [0.4, 0.9, 0.1]  # 尝试修剪比例
 

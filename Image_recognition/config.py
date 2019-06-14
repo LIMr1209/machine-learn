@@ -10,7 +10,7 @@ class DefaultConfig(object):
 
     data_root = "/image/image"  # 数据集存放路径
     load_model_path = None  # 加载训练的模型的路径，为None代表不加载
-    load_model_path = './checkpoint/EfficientNet.pth.tar'  # 加载训练的模型的路径，为None代表不加载
+    # load_model_path = './checkpoint/EfficientNet.pth.tar'  # 加载训练的模型的路径，为None代表不加载
     batch_size = 16  # 每批训练数据的个数,显存不足,适当减少
     use_gpu = True  # 是否使用GPU
     num_workers = 4  # 用于数据预处理的多处理工作器的数量
@@ -20,8 +20,8 @@ class DefaultConfig(object):
     cate_classes = get_classes(data_root)['class2num']  # 图像分类标签列表
     num_classes = len(cate_classes)  # 图像分类个数
     new_train = None  # 新训练图片的路径
-    # pretrained = False  # 不加载预训练
-    pretrained = True  # 加载预训练模型
+    pretrained = False  # 不加载预训练
+    # pretrained = True  # 加载预训练模型
     # pruning = True   # 压缩计划表
     pruning = False  # 是否修剪
     # compress = 'resnet152.schedule_sensitivity.yaml'  # 压缩计划表
@@ -44,11 +44,13 @@ class DefaultConfig(object):
     sensitivity_range = [0.4, 0.9, 0.1]  # 尝试修剪比例
 
     max_epoch = 25  # 学习次数
-    lr = 0.001  # 学习效率
-    lr_decay = 0.5  # 误差增加时,学习效率下降
-    weight_decay = 0e-5  # 损失函数
+    lr = 0.001  # 初始学习效率
+    lr_gamma = 0.5  # 学习效率下降 lr*lr_decay
+    lr_policy = 'multi'  # 学习效率调度器
+    lr_epoch = [3, 5, 7]  # 训练epoch达到milestones值时,初始学习率乘以gamma得到新的学习率;
+    weight_decay = 0e-5  # 优化器权值衰减率
     # date_shuffle = True  # 数据集有序False 随机True
-    url = 'https://imgservice1.suning.cn/uimg1/b2c/image/nc5F5_pjiXv5sYaX2Hrx4w.jpg_800w_800h_4e'  # 识别图片
+    url = None # 识别图片
     error_img = 'error_img.csv'
 
     def _parse(self, kwargs):

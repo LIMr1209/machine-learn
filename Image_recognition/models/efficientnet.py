@@ -1,3 +1,4 @@
+from utils.utils import init_net
 from .basic_module import BasicModule
 from config import opt
 from efficientnet_pytorch import EfficientNet as ef
@@ -14,6 +15,8 @@ def efficientNet(pretrained, override_params=None):
         now_state_dict.update(pretrained_state_dict)
         model.load_state_dict(
             now_state_dict)
+    else:
+        init_net(model)
     return model
 
 

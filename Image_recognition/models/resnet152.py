@@ -1,3 +1,4 @@
+from utils.utils import init_net
 from .basic_module import BasicModule
 import torch.nn as nn
 from config import opt
@@ -45,8 +46,9 @@ class Bottleneck(nn.Module):
 
 
 def resnet152(pretrained=False, **kwargs):
+
+    model = ResNet(Bottleneck, [3, 8, 36, 3], **kwargs)
     if pretrained:
-        model = ResNet(Bottleneck, [3, 8, 36, 3], **kwargs)
         pretrained_state_dict = torch.load(
             './Authority/resnet152-b121ed2d.pth')  # load_url函数根据model_urls字典下载或导入相应的预训练模型
         now_state_dict = model.state_dict()  # 返回model模块的字典
@@ -58,8 +60,9 @@ def resnet152(pretrained=False, **kwargs):
         # 最后通过调用model的load_state_dict方法用预训练的模型参数来初始化你构建的网络结构，
         # 这个方法就是PyTorch中通用的用一个模型的参数初始化另一个模型的层的操作。load_state_dict方法还有一个重要的参数是strict，
         # 该参数默认是True，表示预训练模型的层和你的网络结构层严格对应相等（比如层名和维度）
-        return model
-    return ResNet(Bottleneck, [3, 8, 36, 3], **kwargs)
+    else:
+        init_net(model)
+    return model
 
 
 class ResNet152(BasicModule):

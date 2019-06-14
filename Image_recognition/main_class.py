@@ -10,7 +10,7 @@ import models
 from data.dataset import DatasetFromFilename
 from torch.utils.data import DataLoader
 from utils.image_loader import image_loader
-from utils.utils import AverageMeter, accuracy, write_err_img, config_pylogger
+from utils.utils import AverageMeter, accuracy, write_err_img, config_pylogger, get_scheduler
 from utils.sensitivity import sensitivity_analysis, val
 from utils.progress_bar import ProgressBar
 from tqdm import tqdm
@@ -19,6 +19,7 @@ import distiller.quantization as quantization
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.utils import make_grid
 
+t.backends.cudnn.benchmark = True
 seed = 1000
 t.cuda.manual_seed(seed)  # 随机数种子,当使用随机数时,关闭进程后再次生成和上次得一样
 
@@ -49,11 +50,11 @@ class Classifier:
 
         train_data = DatasetFromFilename(self.opt.data_root, flag='train')  # 训练集
         val_data = DatasetFromFilename(self.opt.data_root, flag='valid')  # 验证集
-        self.test_dataloader = DataLoader(test_data, batch_size=self.opt.batch_size, shuffle=False,
+        self.test_dataloader = DataLoader(test_data, batch_size=self.opt.batch_size, shuffle=True,
                                           num_workers=self.opt.num_workers)
         self.train_dataloader = DataLoader(train_data, self.opt.batch_size, shuffle=True,
                                            num_workers=self.opt.num_workers)  # 训练集加载器
-        self.val_dataloader = DataLoader(val_data, self.opt.batch_size, shuffle=False,
+        self.val_dataloader = DataLoader(val_data, self.opt.batch_size, shuffle=True,
                                          num_workers=self.opt.num_workers)  # 验证集加载器
 
     def create_write(self):
@@ -189,6 +190,7 @@ class Classifier:
         self.train_load_model()
         self.load_compress()
         self.create_write()
+        lr_scheduler = get_scheduler(self.optimizer, opt)
         for epoch in range(self.start_epoch, self.opt.max_epoch):
             self.model.train()
             self.load_data()
@@ -202,6 +204,7 @@ class Classifier:
             train_progressor = ProgressBar(mode="Train  ", epoch=epoch, total_epoch=self.opt.max_epoch,
                                            model_name=self.opt.model,
                                            total=len(self.train_dataloader))
+            lr = lr_scheduler.get_lr()
             for ii, (data, labels, img_path) in enumerate(self.train_dataloader):
                 if self.opt.pruning:
                     self.compression_scheduler.on_minibatch_begin(epoch, ii, steps_per_epoch,
@@ -254,22 +257,24 @@ class Classifier:
             # 按稀疏度排序为主排序键，然后按top1、top5、epoch排序
             perf_scores_history.sort(key=operator.attrgetter('sparsity', 'top1', 'top5', 'epoch'), reverse=True)
             for score in perf_scores_history[:1]:
-                 msglogger.info('==> Best [Top1: %.3f   Top5: %.3f   Sparsity: %.2f on epoch: %d   Lr: %f   Loss: %f]',
-                           score.top1, score.top5, score.sparsity, score.epoch, lr, score.loss)
+                msglogger.info('==> Best [Top1: %.3f   Top5: %.3f   Sparsity: %.2f on epoch: %d   Lr: %f   Loss: %f]',
+                               score.top1, score.top5, score.sparsity, score.epoch, lr, score.loss)
 
             is_best = epoch == perf_scores_history[0].epoch  # 当前epoch 和最佳epoch 一样
             self.best_precision = max(perf_scores_history[0].top1, self.best_precision)  # 最大top1 准确率
             if is_best:
                 self.train_save_model(epoch, val_loss, val_top1, val_top5)
             # update learning rate
-            # 如果训练误差比上次大　降低学习效率
-            if self.train_losses.val > previous_loss:
-                lr = lr * self.opt.lr_decay
-                # 当loss大于上一次loss,降低学习率
-                for param_group in self.optimizer.param_groups:
-                    param_group['lr'] = lr
-
-            previous_loss = self.train_losses.val
+            lr = lr_scheduler.get_lr()
+            # # 如果训练误差比上次大　降低学习效率
+            # if self.train_losses.val > previous_loss:
+            #     lr = lr * self.opt.lr_decay
+            #     # 当loss大于上一次loss,降低学习率
+            #     for param_group in self.optimizer.param_groups:
+            #         param_group['lr'] = lr
+            #
+            # previous_loss = self.train_losses.val
+            t.cuda.empty_cache()
 
 
 def train(**kwargs):
