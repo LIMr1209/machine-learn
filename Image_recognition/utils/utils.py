@@ -92,15 +92,15 @@ def get_scheduler(optimizer, opt):
     For other schedulers (step, plateau, and cosine), we use the default PyTorch schedulers.
     See https://pytorch.org/docs/stable/optim.html for more details.
     """
-    if opt.lr_policy == 'linear':
-        def lambda_rule(epoch):
-            lr_l = 1.0 - max(0, epoch + opt.epoch_count - opt.niter) / float(opt.niter_decay + 1)
-            return lr_l
-
-        scheduler = lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda_rule)
+    if opt.lr_policy == 'plateau':
+        # 当网络的评价指标不在提升的时候，可以通过降低网络的学习率来提高网络性能。
+        # 当train_loss 不在下降时 降低学习率
+        scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, 'min', factor=opt.lr_gamma, patience=4, verbose=True)
     elif opt.lr_policy == 'step':
-        scheduler = lr_scheduler.StepLR(optimizer, step_size=100, gamma=0.1)
+        # 当epoch in [3,6,9,..]  学习率下降
+        scheduler = lr_scheduler.StepLR(optimizer, step_size=3, gamma=opt.lr_gamma)
     elif opt.lr_policy == 'multi':
+        # 当epoch in milestones  学习率下降
         scheduler = lr_scheduler.MultiStepLR(optimizer, milestones=opt.lr_epoch, gamma=opt.lr_gamma)
     else:
         return NotImplementedError('learning rate policy [%s] is not implemented', opt.lr_policy)

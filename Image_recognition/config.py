@@ -46,11 +46,11 @@ class DefaultConfig(object):
     max_epoch = 25  # 学习次数
     lr = 0.001  # 初始学习效率
     lr_gamma = 0.5  # 学习效率下降 lr*lr_decay
-    lr_policy = 'multi'  # 学习效率调度器
+    lr_policy = 'multi'  # 学习效率调度器  plateau,step,multi
     lr_epoch = [3, 5, 7]  # 训练epoch达到milestones值时,初始学习率乘以gamma得到新的学习率;
     weight_decay = 0e-5  # 优化器权值衰减率
     # date_shuffle = True  # 数据集有序False 随机True
-    url = None # 识别图片
+    url = None  # 识别图片
     error_img = 'error_img.csv'
 
     def _parse(self, kwargs):
