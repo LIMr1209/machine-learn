@@ -49,7 +49,7 @@ def accuracy(output, target, topk=(1,)):
     with torch.no_grad():
         maxk = max(topk)
         batch_size = target.size(0)
-        # https: // pytorch - cn.readthedocs.io / zh / latest / package_references / torch /  # torchtopk
+        # https://pytorch-cn.readthedocs.io/zh/latest/package_references/torch/#torchtopk
         _, pred = output.topk(maxk, 1, True, True)  # 返回分值最大的两类的index
         pred = pred.t()  # 转置
         correct = pred.eq(target.view(1, -1).expand_as(pred))
@@ -80,18 +80,6 @@ def config_pylogger(log_cfg_file, experiment_name, output_dir='logs'):
 
 #  学习速率调度器
 def get_scheduler(optimizer, opt):
-    """Return a learning rate scheduler
-
-    Parameters:
-        optimizer          -- the optimizer of the network
-        opt (option class) -- stores all the experiment flags; needs to be a subclass of BaseOptions．　
-                              opt.lr_policy is the name of learning rate policy: linear | step | plateau | cosine
-
-    For 'linear', we keep the same learning rate for the first <opt.niter> epochs
-    and linearly decay the rate to zero over the next <opt.niter_decay> epochs.
-    For other schedulers (step, plateau, and cosine), we use the default PyTorch schedulers.
-    See https://pytorch.org/docs/stable/optim.html for more details.
-    """
     if opt.lr_policy == 'plateau':
         # 当网络的评价指标不在提升的时候，可以通过降低网络的学习率来提高网络性能。
         # 当train_loss 不在下降时 降低学习率
