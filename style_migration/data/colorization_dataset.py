@@ -12,7 +12,6 @@ class ColorizationDataset(BaseDataset):
 
     This dataset is required by pix2pix-based colorization model ('--model colorization')
     """
-
     @staticmethod
     def modify_commandline_options(parser, is_train):
         """Add new dataset-specific options, and rewrite default values for existing options.
@@ -25,7 +24,7 @@ class ColorizationDataset(BaseDataset):
             the modified parser.
 
         By default, the number of channels for input image  is 1 (L) and
-        the nubmer of channels for output image is 2 (ab). The direction is from A to B
+        the number of channels for output image is 2 (ab). The direction is from A to B
         """
         parser.set_defaults(input_nc=1, output_nc=2, direction='AtoB')
         return parser
@@ -37,9 +36,9 @@ class ColorizationDataset(BaseDataset):
             opt (Option class) -- stores all the experiment flags; needs to be a subclass of BaseOptions
         """
         BaseDataset.__init__(self, opt)
-        self.dir = os.path.join(opt.dataroot)
+        self.dir = os.path.join(opt.dataroot, opt.phase)
         self.AB_paths = sorted(make_dataset(self.dir, opt.max_dataset_size))
-        assert (opt.input_nc == 1 and opt.output_nc == 2 and opt.direction == 'AtoB')
+        assert(opt.input_nc == 1 and opt.output_nc == 2 and opt.direction == 'AtoB')
         self.transform = get_transform(self.opt, convert=False)
 
     def __getitem__(self, index):
