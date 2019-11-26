@@ -18,4 +18,5 @@ nohup.out
 core
 runs/
 mnist/
+results/
 experiment/

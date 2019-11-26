@@ -6,9 +6,9 @@ import torch
 
 
 def efficientNet(pretrained, override_params=None):
-    model = ef.from_name('efficientnet-b3', override_params=override_params)
+    model = ef.from_name('efficientnet-b5', override_params=override_params)
     if pretrained:
-        pretrained_state_dict = torch.load('./Authority/efficientnet-b3-c8376fa2.pth')
+        pretrained_state_dict = torch.load('Authority/efficientnet-b5-586e6cc6.pth')
         now_state_dict = model.state_dict()  # 返回model模块的字典
         pretrained_state_dict.pop('_fc.weight')  # 排除全连接层的参数(全连接层返回分类个数)
         pretrained_state_dict.pop('_fc.bias')
@@ -40,6 +40,6 @@ class EfficientNet(BasicModule):
 
 if __name__ == '__main__':
     a = EfficientNet().to(torch.device('cuda'))
-    input = torch.autograd.Variable(torch.randn(16, 3, 224, 224)).to(torch.device('cuda'))
+    input = torch.autograd.Variable(torch.randn(6, 3, 224, 224)).to(torch.device('cuda'))
     output = a(input)
     print(output.size())

@@ -11,7 +11,7 @@ class DefaultConfig(object):
     data_root = "/image/image"  # 数据集存放路径
     load_model_path = None  # 加载训练的模型的路径，为None代表不加载
     # load_model_path = './checkpoint/EfficientNet.pth.tar'  # 加载训练的模型的路径，为None代表不加载
-    batch_size = 16  # 每批训练数据的个数,显存不足,适当减少
+    batch_size = 12  # 每批训练数据的个数,显存不足,适当减少
     use_gpu = True  # 是否使用GPU
     num_workers = 4  # 用于数据预处理的多处理工作器的数量
     print_freq = 100  # 数据可视化指数
@@ -20,8 +20,8 @@ class DefaultConfig(object):
     cate_classes = get_classes(data_root)['class2num']  # 图像分类标签列表
     num_classes = len(cate_classes)  # 图像分类个数
     new_train = None  # 新训练图片的路径
-    pretrained = False  # 不加载预训练
-    # pretrained = True  # 加载预训练模型
+    # pretrained = False  # 不加载预训练
+    pretrained = True  # 加载预训练模型
     # pruning = True   # 压缩计划表
     pruning = False  # 是否修剪
     # compress = 'resnet152.schedule_sensitivity.yaml'  # 压缩计划表

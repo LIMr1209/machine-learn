@@ -50,7 +50,7 @@ def load_model(path):
 
 
 if __name__ == '__main__':
-    model = load_model('./checkpoints/horse2zebra_pretrained/latest_net_G.pth')
+    model = load_model('./checkpoints/winter2summer_yosemite.pth')
     input = load_img('./test/test.jpg')
     torch.set_grad_enabled(False)
     output = model(input)
