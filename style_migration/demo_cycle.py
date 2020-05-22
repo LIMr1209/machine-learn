@@ -50,11 +50,13 @@ def load_model(path):
 
 
 if __name__ == '__main__':
-    model = load_model('./checkpoints/winter2summer_yosemite.pth')
-    input = load_img('./test/test.jpg')
+    import os
+    model = load_model('/image/ai/machine-learn/style_migration/checkpoints/edges2plate_cyclegan/latest_net_G_A.pth')
     torch.set_grad_enabled(False)
-    output = model(input)
-    result = tensor2im(output)
-    img_new = Image.fromarray(result)
-    img_new.save('./test/test_new.jpg')
+    for i, file in enumerate(sorted(os.listdir('/image/ai/machine-learn/style_migration/test'))):
+        input = load_img('/image/ai/machine-learn/style_migration/test/'+file)
+        output = model(input)
+        result = tensor2im(output)
+        img_new = Image.fromarray(result)
+        img_new.save('/image/ai/machine-learn/style_migration/test1/'+file)
     torch.set_grad_enabled(True)

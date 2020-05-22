@@ -2,9 +2,8 @@ from aip import AipImageClassify
 import cv2
 import math
 import numpy as np
-import base64
 import requests
-from io import BytesIO
+import time
 
 
 def get_hue(a, b):
@@ -118,9 +117,9 @@ def rgb2hex(rgb):
     return color
 
 
-APP_ID = '15180965'
-API_KEY = 'Gjw3RzhDcMSS8RESUEiVNWkH'
-SECRET_KEY = 'pZVtDe5Z74cA2ropdsI3s3rGMrFmXH9N'
+APP_ID = '17887227'
+API_KEY = 'HXkluVYkuRL1PURlsa973vsl'
+SECRET_KEY = 'khKaBZEkN2EnDoeRkU18pGbBF71CH2Fd'
 
 
 class ImageColor:
@@ -130,19 +129,16 @@ class ImageColor:
         self.param = None
         self.url = url
         self.img = None
+        self.response = None
 
     # 读取图片
     def read_image(self):
         if self.file_path:
             self.img = cv2.imread(self.file_path)
         elif self.url:
-
-            cap = cv2.VideoCapture(self.url)
-            ret, img = cap.read()
-            if not ret:
-                response = requests.get(self.url)
-                image_numpy = np.asarray(bytearray(response.content), dtype="uint8")
-                img = cv2.imdecode(image_numpy, cv2.IMREAD_COLOR)
+            self.response = requests.get(self.url)
+            image_numpy = np.asarray(bytearray(self.response.content), dtype="uint8")
+            img = cv2.imdecode(image_numpy, cv2.IMREAD_COLOR)
             self.img = img
 
     # 主体检测
@@ -156,22 +152,32 @@ class ImageColor:
                 self.param = response['result']
         elif self.url:
             # 调用图像主体检测
-            response = requests.get(self.url)
             options = dict()
             options["with_face"] = 0
-            response = self.client.objectDetect(response.content, options)
-            self.param = response['result']
+            response = self.client.objectDetect(self.response.content, options)
+            if 'result' in response:
+                self.param = response['result']
 
     # 主体参数裁剪图片
     def tailoring(self):
-        initial_image = self.img[self.param['top']:self.param['top'] + self.param['height'],
-                        self.param['left']:self.param['left'] + self.param['width']]
+        if self.param:
+            self.img = self.img[self.param['top']:self.param['top'] + self.param['height'],
+                            self.param['left']:self.param['left'] + self.param['width']]
         # cv2.imshow('ai', initial_image)  # 显示图片
         # cv2.waitKey(0)
-        self.img = initial_image
 
     # 颜色识别
     def color_recognition(self, expected_size=40, in_clusters=7, out_clusters=3):
+        a = time.time()
+        self.read_image()
+        b = time.time()
+        # print('读取图片',b-a)
+        self.subject_detection()
+        c = time.time()
+        # print('主体检测', c - b)
+        self.tailoring()
+        d = time.time()
+        # print('裁剪', d - c)
         height, width = self.img.shape[:2]
 
         factor = math.sqrt(width * height / (expected_size * expected_size))
@@ -180,8 +186,6 @@ class ImageColor:
         image = cv2.resize(self.img,
                            (int(width / factor), int(height / factor)),
                            interpolation=cv2.INTER_LINEAR)
-        cv2.imshow('ai', image)
-        cv2.waitKey(0)
         LAB_image = cv2.cvtColor(image, cv2.COLOR_BGR2Lab)
         frame_width = int(expected_size / 10 + 2)
         in_samples = []
@@ -311,13 +315,12 @@ class ImageColor:
             color = ','.join('%s' % id for id in color)
             color_weight = round(proportions[i] / sum(proportions), 2)
             color_list.append((color_weight, color, rgb2hex(color)))
-        # color_list = sorted(color_list, key=lambda d: d[0], reverse=True)
+        color_list = sorted(color_list, key=lambda d: d[0], reverse=True)
+        e = time.time()
+        # print('识别',e-d)
         return color_list
 
 
 if __name__ == '__main__':
-    image_color = ImageColor(url='https://s4.taihuoniao.com/opalus/image/190102/5c2c5a60ce156a0a1c0221e7')
-    image_color.subject_detection()
-    image_color.read_image()
-    image_color.tailoring()
+    image_color = ImageColor(url='https://s4.taihuoniao.com/opalus/image/191204/5de727835ba06347902cd72f')
     print(image_color.color_recognition())

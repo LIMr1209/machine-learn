@@ -130,6 +130,7 @@ def train(**kwargs):
     if opt.load_model_path:
         # # 把所有的张量加载到CPU中
         # t.load(opt.load_model_path, map_location=lambda storage, loc: storage)
+        # t.load(opt.load_model_path, map_location='cpu')
         # # 把所有的张量加载到GPU 1中
         # t.load(opt.load_model_path, map_location=lambda storage, loc: storage.cuda(1))
         # # 把张量从GPU 1 移动到 GPU 0
