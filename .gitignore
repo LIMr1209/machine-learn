@@ -20,3 +20,4 @@ runs/
 mnist/
 results/
 experiment/
+env/
