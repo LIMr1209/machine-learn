@@ -167,7 +167,7 @@ def train(**kwargs):
         train_progressor = ProgressBar(mode="Train  ", epoch=epoch, total_epoch=opt.max_epoch,
                                        model_name=opt.model, lr=lr,
                                        total=len(train_dataloader))
-        lr = lr_scheduler.get_lr()
+        lr = lr_scheduler.get_lr()[0]
         for ii, (data, labels, img_path, tag) in enumerate(train_dataloader):
             if not check_date(img_path, tag, msglogger): return
             if opt.pruning:

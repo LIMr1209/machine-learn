@@ -21,3 +21,6 @@ mnist/
 results/
 experiment/
 env/
+lightning_logs/
+MNIST
+*.ckpt
