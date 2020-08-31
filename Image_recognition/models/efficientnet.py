@@ -6,9 +6,9 @@ import torch
 
 
 def efficientNet(pretrained, override_params=None):
-    model = ef.from_name('efficientnet-b5', override_params=override_params)
+    model = ef.from_name('efficientnet-b7', override_params=override_params)
     if pretrained:
-        pretrained_state_dict = torch.load('Authority/efficientnet-b5-586e6cc6.pth')
+        pretrained_state_dict = torch.load('Authority/efficientnet-b7-dcc49843.pth')
         now_state_dict = model.state_dict()  # 返回model模块的字典
         pretrained_state_dict.pop('_fc.weight')  # 排除全连接层的参数(全连接层返回分类个数)
         pretrained_state_dict.pop('_fc.bias')
