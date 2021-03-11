@@ -168,15 +168,15 @@ class ImageColor:
 
     # 颜色识别
     def color_recognition(self, expected_size=40, in_clusters=7, out_clusters=3):
-        a = time.time()
+        # a = time.time()
         self.read_image()
-        b = time.time()
+        # b = time.time()
         # print('读取图片',b-a)
-        self.subject_detection()
-        c = time.time()
+        # self.subject_detection()
+        # c = time.time()
         # print('主体检测', c - b)
-        self.tailoring()
-        d = time.time()
+        # self.tailoring()
+        # d = time.time()
         # print('裁剪', d - c)
         height, width = self.img.shape[:2]
 
@@ -322,5 +322,5 @@ class ImageColor:
 
 
 if __name__ == '__main__':
-    image_color = ImageColor(url='https://s4.taihuoniao.com/opalus/image/191204/5de727835ba06347902cd72f')
+    image_color = ImageColor(url='https://p4.taihuoniao.com/image/201023/5f925531b8867a3622b5f161')
     print(image_color.color_recognition())

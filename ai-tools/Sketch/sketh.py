@@ -1,4 +1,3 @@
-import numpy as np
 import argparse
 import cv2
 import imutils
@@ -58,7 +57,7 @@ image = cv2.imread('test.jpg')
 image = imutils.resize(image,height=500)
 
 gray = cv2.cvtColor(image,cv2.COLOR_BGR2GRAY) #灰度图像
-gray = cv2.GaussianBlur(gray,(5,5),0)          #高斯模糊
+# gray = cv2.GaussianBlur(gray,(5,5),0)          #高斯模糊
 edged = cv2.Canny(gray,75,200)                  #边缘检测
 
 
