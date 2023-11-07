@@ -2,8 +2,8 @@ import math
 import os
 import operator
 from datetime import datetime
-import distiller
-from distiller.data_loggers import *
+# import distiller
+# from distiller.data_loggers import *
 from config import opt
 import torch as t
 import models
@@ -36,7 +36,7 @@ class Classifier:
         # 4. 指数损失（Exponential Loss） ：主要用于Adaboost 集成学习算法中；
         # 5. 其他损失（如0-1损失，绝对值损失）
         self.optimizer = self.model.get_optimizer(self.opt.lr, self.opt.weight_decay)
-        self.compression_scheduler = distiller.CompressionScheduler(self.model)
+        # self.compression_scheduler = distiller.CompressionScheduler(self.model)
         self.train_losses = AverageMeter()  # 误差仪表
         self.train_top1 = AverageMeter()  # top1 仪表
         self.train_top5 = AverageMeter()  # top5 仪表
@@ -113,8 +113,8 @@ class Classifier:
     def load_compress(self):
 
         if self.opt.compress:
-            self.compression_scheduler = distiller.file_config(self.model, self.optimizer, self.opt.compress,
-                                                               self.compression_scheduler)  # 加载模型修剪计划表
+            # self.compression_scheduler = distiller.file_config(self.model, self.optimizer, self.opt.compress,
+            #                                                    self.compression_scheduler)  # 加载模型修剪计划表
             self.model.to(self.opt.device)
 
     def visualization_train(self, input, ii, epoch):
@@ -245,14 +245,14 @@ class Classifier:
                 if (ii + 1) % self.opt.print_freq == 0:
                     self.visualization_train(input, ii, epoch)
             if self.opt.pruning:
-                distiller.log_weights_sparsity(self.model, epoch, loggers=[pylogger])  # 打印模型修剪结果
+                # distiller.log_weights_sparsity(self.model, epoch, loggers=[pylogger])  # 打印模型修剪结果
                 self.compression_scheduler.on_epoch_end(epoch, self.optimizer)  # epoch 结束修剪
             val_loss, val_top1, val_top5 = val(self.model, self.criterion, self.val_dataloader, epoch,
                                                self.value_writer)  # 校验模型
-            sparsity = distiller.model_sparsity(self.model)
-            perf_scores_history.append(distiller.MutableNamedTuple({'sparsity': sparsity, 'top1': val_top1,
-                                                                    'top5': val_top5, 'epoch': epoch + 1, 'lr': lr,
-                                                                    'loss': val_loss}, ))
+            # sparsity = distiller.model_sparsity(self.model)
+            # perf_scores_history.append(distiller.MutableNamedTuple({'sparsity': sparsity, 'top1': val_top1,
+            #                                                         'top5': val_top5, 'epoch': epoch + 1, 'lr': lr,
+            #                                                         'loss': val_loss}, ))
             # 保持绩效分数历史记录从最好到最差的排序
             # 按稀疏度排序为主排序键，然后按top1、top5、epoch排序
             perf_scores_history.sort(key=operator.attrgetter('sparsity', 'top1', 'top5', 'epoch'), reverse=True)

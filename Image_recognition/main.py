@@ -2,8 +2,8 @@ import math
 import os
 import operator
 from datetime import datetime
-import distiller
-from distiller.data_loggers import *
+# import distiller
+# from distiller.data_loggers import *
 from config import opt
 import torch as t
 import models
@@ -11,16 +11,16 @@ from data.dataset import DatasetFromFilename
 from torch.utils.data import DataLoader
 from utils.image_loader import image_loader
 from utils.utils import AverageMeter, accuracy, write_err_img, config_pylogger, check_date, get_scheduler
-from utils.sensitivity import sensitivity_analysis, val
+from utils.sensitivity import val
 from utils.progress_bar import ProgressBar
 from tqdm import tqdm
 import numpy as np
-import distiller.quantization as quantization
+# import distiller.quantization as quantization
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.utils import make_grid
 
 t.backends.cudnn.benchmark = True
-# 如果我们的输入在每一次的iterate的时候都进行变化，那么benchmark就会在每次iterate的时候重新选择最优算法，当选选择是需要花费时间的，
+# 如果我们的输入在每一次的iterate的时候都进行变化，那么benchmark就会在每次iterate的时候重新选择最优算法，当选选择是需要花费时间的，pip freeze > requirements.txt
 # 反而速度会变慢，也就是说，如果我们每次训练的输入数据的size不变，那么开启这个就会加快我们的训练速度：
 seed = 1000
 t.manual_seed(seed)  # 随机数种子,当使用随机数时,关闭进程后再次生成和上次得一样
@@ -44,11 +44,11 @@ def test(**kwargs):
         total = 0
         msglogger.info('测试数据集大小%s', len(test_dataloader))
         # 量化
-        if opt.quantize_eval:
-            model.cpu()
-            quantizer = quantization.PostTrainLinearQuantizer.from_args(model, opt)  # 量化模型
-            quantizer.prepare_model()
-            model.to(opt.device)
+        # if opt.quantize_eval:
+        #     model.cpu()
+        #     quantizer = quantization.PostTrainLinearQuantizer.from_args(model, opt)  # 量化模型
+        #     quantizer.prepare_model()
+        #     model.to(opt.device)
         model.eval()  # 把module设成测试模式，对Dropout和BatchNorm有影响
         err_img = [('img_path', 'result', 'label')]
         for ii, (data, labels, img_path, tag) in tqdm(enumerate(test_dataloader)):
@@ -125,7 +125,7 @@ def train(**kwargs):
     pylogger = PythonLogger(msglogger)
     # step3: configure model
     model = getattr(models, opt.model)()  # 获得网络结构
-    compression_scheduler = distiller.CompressionScheduler(model)
+    # compression_scheduler = distiller.CompressionScheduler(model)
     optimizer = model.get_optimizer(lr, opt.weight_decay)  # 优化器
     if opt.load_model_path:
         # # 把所有的张量加载到CPU中
@@ -143,10 +143,10 @@ def train(**kwargs):
         optimizer = checkpoint['optimizer']
     model.to(opt.device)  # 加载模型到 GPU
 
-    if opt.compress:
-        compression_scheduler = distiller.file_config(model, optimizer, opt.compress,
-                                                      compression_scheduler)  # 加载模型修剪计划表
-        model.to(opt.device)
+    # if opt.compress:
+    #     compression_scheduler = distiller.file_config(model, optimizer, opt.compress,
+    #                                                   compression_scheduler)  # 加载模型修剪计划表
+    #     model.to(opt.device)
     # 学习速率调整器
     lr_scheduler = get_scheduler(optimizer, opt)
     # step4: data_image
@@ -157,8 +157,8 @@ def train(**kwargs):
     # train
     for epoch in range(start_epoch, opt.max_epoch):
         model.train()
-        if opt.pruning:
-            compression_scheduler.on_epoch_begin(epoch)  # epoch 开始修剪
+        # if opt.pruning:
+            # compression_scheduler.on_epoch_begin(epoch)  # epoch 开始修剪
         train_losses.reset()  # 重置仪表
         train_top1.reset()  # 重置仪表
         # print('训练数据集大小', len(train_dataloader))
@@ -170,8 +170,8 @@ def train(**kwargs):
         lr = lr_scheduler.get_lr()[0]
         for ii, (data, labels, img_path, tag) in enumerate(train_dataloader):
             if not check_date(img_path, tag, msglogger): return
-            if opt.pruning:
-                compression_scheduler.on_minibatch_begin(epoch, ii, steps_per_epoch, optimizer)  # batch 开始修剪
+            # if opt.pruning:
+            #     compression_scheduler.on_minibatch_begin(epoch, ii, steps_per_epoch, optimizer)  # batch 开始修剪
             train_progressor.current = ii + 1  # 训练集当前进度
             # train model
             input = data.to(opt.device)
@@ -182,21 +182,21 @@ def train(**kwargs):
             score = model(input)  # 网络结构返回值
             # 计算损失
             loss = criterion(score, target)
-            if opt.pruning:
-                # Before running the backward phase, we allow the scheduler to modify the loss
-                # (e.g. add regularization loss)
-                agg_loss = compression_scheduler.before_backward_pass(epoch, ii, steps_per_epoch, loss,
-                                                                      optimizer=optimizer,
-                                                                      return_loss_components=True)  # 模型修建误差
-                loss = agg_loss.overall_loss
+            # if opt.pruning:
+            #     # Before running the backward phase, we allow the scheduler to modify the loss
+            #     # (e.g. add regularization loss)
+            #     agg_loss = compression_scheduler.before_backward_pass(epoch, ii, steps_per_epoch, loss,
+            #                                                           optimizer=optimizer,
+            #                                                           return_loss_components=True)  # 模型修建误差
+            #     loss = agg_loss.overall_loss
             train_losses.update(loss.item(), input.size(0))
             # loss = criterion(score[0], target)  # 计算损失   Inception3网络
             optimizer.zero_grad()  # 参数梯度设成0
             loss.backward()  # 反向传播
             optimizer.step()  # 更新参数
 
-            if opt.pruning:
-                compression_scheduler.on_minibatch_end(epoch, ii, steps_per_epoch, optimizer)  # batch 结束修剪
+            # if opt.pruning:
+            #     compression_scheduler.on_minibatch_end(epoch, ii, steps_per_epoch, optimizer)  # batch 结束修剪
 
             precision1_train, precision5_train = accuracy(score, target, topk=(1, 5))  # top1 和 top5 的准确率
 
@@ -219,14 +219,14 @@ def train(**kwargs):
                                                           'loss': train_losses.avg}, ii * (epoch + 1))
         # train_progressor.done()  # 保存训练结果为txt
         # validate and visualize
-        if opt.pruning:
-            distiller.log_weights_sparsity(model, epoch, loggers=[pylogger])  # 打印模型修剪结果
-            compression_scheduler.on_epoch_end(epoch, optimizer)  # epoch 结束修剪
+        # if opt.pruning:
+        #     distiller.log_weights_sparsity(model, epoch, loggers=[pylogger])  # 打印模型修剪结果
+        #     compression_scheduler.on_epoch_end(epoch, optimizer)  # epoch 结束修剪
         val_loss, val_top1, val_top5 = val(model, criterion, val_dataloader, epoch, value_writer, lr)  # 校验模型
-        sparsity = distiller.model_sparsity(model)
-        perf_scores_history.append(distiller.MutableNamedTuple({'sparsity': sparsity, 'top1': val_top1,
-                                                                'top5': val_top5, 'epoch': epoch + 1, 'lr': lr,
-                                                                'loss': val_loss}, ))
+        # sparsity = distiller.model_sparsity(model)
+        # perf_scores_history.append(distiller.MutableNamedTuple({'sparsity': sparsity, 'top1': val_top1,
+        #                                                         'top5': val_top5, 'epoch': epoch + 1, 'lr': lr,
+        #                                                         'loss': val_loss}, ))
         # 保持绩效分数历史记录从最好到最差的排序
         # 按稀疏度排序为主排序键，然后按top1、top5、epoch排序
         perf_scores_history.sort(key=operator.attrgetter('sparsity', 'top1', 'top5', 'epoch'), reverse=True)
@@ -244,7 +244,7 @@ def train(**kwargs):
                 "best_precision": best_precision,
                 "optimizer": optimizer,
                 "valid_loss": [val_loss, val_top1, val_top5],
-                'compression_scheduler': compression_scheduler.state_dict(),
+                # 'compression_scheduler': compression_scheduler.state_dict(),
             })  # 保存模型
         # update learning rate
         lr_scheduler.step(epoch)  # 更新学习效率
@@ -260,18 +260,18 @@ def train(**kwargs):
 
 
 # 模型敏感性分析
-def sensitivity(**kwargs):
-    opt._parse(kwargs)
-    test_data = DatasetFromFilename(opt.data_root, flag='test')
-    test_dataloader = DataLoader(test_data, batch_size=opt.batch_size, shuffle=False, num_workers=opt.num_workers)
-    criterion = t.nn.CrossEntropyLoss().to(opt.device)  # 损失函数
-    model = getattr(models, opt.model)()
-    if opt.load_model_path:
-        checkpoint = t.load(opt.load_model_path)
-        model.load_state_dict(checkpoint["state_dict"])
-    model.to(opt.device)
-    sensitivities = np.arange(opt.sensitivity_range[0], opt.sensitivity_range[1], opt.sensitivity_range[2])
-    return sensitivity_analysis(model, criterion, test_dataloader, opt, sensitivities, msglogger)
+# def sensitivity(**kwargs):
+#     opt._parse(kwargs)
+#     test_data = DatasetFromFilename(opt.data_root, flag='test')
+#     test_dataloader = DataLoader(test_data, batch_size=opt.batch_size, shuffle=False, num_workers=opt.num_workers)
+#     criterion = t.nn.CrossEntropyLoss().to(opt.device)  # 损失函数
+#     model = getattr(models, opt.model)()
+#     if opt.load_model_path:
+#         checkpoint = t.load(opt.load_model_path)
+#         model.load_state_dict(checkpoint["state_dict"])
+#     model.to(opt.device)
+#     sensitivities = np.arange(opt.sensitivity_range[0], opt.sensitivity_range[1], opt.sensitivity_range[2])
+#     return sensitivity_analysis(model, criterion, test_dataloader, opt, sensitivities, msglogger)
 
 
 def help():
