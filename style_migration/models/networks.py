@@ -29,7 +29,7 @@ def get_norm_layer(norm_type='instance'):
     elif norm_type == 'instance':
         norm_layer = functools.partial(nn.InstanceNorm2d, affine=False, track_running_stats=False)
     elif norm_type == 'none':
-        norm_layer = lambda x: Identity()
+        def norm_layer(x): return Identity()
     else:
         raise NotImplementedError('normalization layer [%s] is not found' % norm_type)
     return norm_layer
@@ -43,14 +43,14 @@ def get_scheduler(optimizer, opt):
         opt (option class) -- stores all the experiment flags; needs to be a subclass of BaseOptions．　
                               opt.lr_policy is the name of learning rate policy: linear | step | plateau | cosine
 
-    For 'linear', we keep the same learning rate for the first <opt.niter> epochs
-    and linearly decay the rate to zero over the next <opt.niter_decay> epochs.
+    For 'linear', we keep the same learning rate for the first <opt.n_epochs> epochs
+    and linearly decay the rate to zero over the next <opt.n_epochs_decay> epochs.
     For other schedulers (step, plateau, and cosine), we use the default PyTorch schedulers.
     See https://pytorch.org/docs/stable/optim.html for more details.
     """
     if opt.lr_policy == 'linear':
         def lambda_rule(epoch):
-            lr_l = 1.0 - max(0, epoch + opt.epoch_count - opt.niter) / float(opt.niter_decay + 1)
+            lr_l = 1.0 - max(0, epoch + opt.epoch_count - opt.n_epochs) / float(opt.n_epochs_decay + 1)
             return lr_l
         scheduler = lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda_rule)
     elif opt.lr_policy == 'step':
@@ -58,7 +58,7 @@ def get_scheduler(optimizer, opt):
     elif opt.lr_policy == 'plateau':
         scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.2, threshold=0.01, patience=5)
     elif opt.lr_policy == 'cosine':
-        scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=opt.niter, eta_min=0)
+        scheduler = lr_scheduler.CosineAnnealingLR(optimizer, T_max=opt.n_epochs, eta_min=0)
     else:
         return NotImplementedError('learning rate policy [%s] is not implemented', opt.lr_policy)
     return scheduler
@@ -181,7 +181,7 @@ def define_D(input_nc, ndf, netD, n_layers_D=3, norm='batch', init_type='normal'
         than a full-image discriminator and can work on arbitrarily-sized images
         in a fully convolutional fashion.
 
-        [n_layers]: With this mode, you cna specify the number of conv layers in the discriminator
+        [n_layers]: With this mode, you can specify the number of conv layers in the discriminator
         with the parameter <n_layers_D> (default=3 as used in [basic] (PatchGAN).)
 
         [pixel]: 1x1 PixelGAN discriminator can classify whether a pixel is real or not.
@@ -284,7 +284,7 @@ def cal_gradient_penalty(netD, real_data, fake_data, device, type='mixed', const
         fake_data (tensor array)    -- generated images from the generator
         device (str)                -- GPU / CPU: from torch.device('cuda:{}'.format(self.gpu_ids[0])) if self.gpu_ids else torch.device('cpu')
         type (str)                  -- if we mix real and fake data or not [real | fake | mixed].
-        constant (float)            -- the constant used in formula ( | |gradient||_2 - constant)^2
+        constant (float)            -- the constant used in formula ( ||gradient||_2 - constant)^2
         lambda_gp (float)           -- weight for this loss
 
     Returns the gradient penalty loss
@@ -483,7 +483,7 @@ class UnetSkipConnectionBlock(nn.Module):
             outermost (bool)    -- if this module is the outermost module
             innermost (bool)    -- if this module is the innermost module
             norm_layer          -- normalization layer
-            user_dropout (bool) -- if use dropout layers.
+            use_dropout (bool)  -- if use dropout layers.
         """
         super(UnetSkipConnectionBlock, self).__init__()
         self.outermost = outermost

@@ -1,10 +1,10 @@
 """General-purpose test script for image-to-image translation.
 
 Once you have trained your model with train.py, you can use this script to test the model.
-It will load a saved model from --checkpoints_dir and save the results to --results_dir.
+It will load a saved model from '--checkpoints_dir' and save the results to '--results_dir'.
 
 It first creates model and dataset given the option. It will hard-code some parameters.
-It then runs inference for --num_test images and save results to an HTML file.
+It then runs inference for '--num_test' images and save results to an HTML file.
 
 Example (You need to train models first or download pre-trained models from our website):
     Test a CycleGAN model (both sides):
@@ -63,7 +63,7 @@ if __name__ == '__main__':
         model.test()           # run inference
         visuals = model.get_current_visuals()  # get image results
         img_path = model.get_image_paths()     # get image paths
-        if i % 1 == 0:  # save images to an HTML file
+        if i % 5 == 0:  # save images to an HTML file
             print('processing (%04d)-th image... %s' % (i, img_path))
         save_images(webpage, visuals, img_path, aspect_ratio=opt.aspect_ratio, width=opt.display_winsize)
     webpage.save()  # save the HTML
